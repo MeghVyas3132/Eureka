@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "jsx": "react-jsx",
+    "ignoreDeprecations": "5.0",
+    "isolatedModules": true,
+    "noEmit": false
+  }
+}
