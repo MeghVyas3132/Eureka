@@ -5,17 +5,14 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 
 import AuthCard from "@/components/auth/AuthCard";
-import { useAuthStore } from "@/store/authStore";
+import { getPostLoginRoute, useAuthStore } from "@/store/authStore";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, token, initializeAuth } = useAuthStore();
+  const { login, token, user, initializeAuth } = useAuthStore();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loginAs, setLoginAs] = useState<"admin" | "individual plus" | "individual pro" | "enterprise">(
-    "individual plus",
-  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -24,10 +21,10 @@ export default function LoginPage() {
   }, [initializeAuth]);
 
   useEffect(() => {
-    if (token) {
-      router.replace("/dashboard");
+    if (token && user) {
+      router.replace(getPostLoginRoute(user));
     }
-  }, [router, token]);
+  }, [router, token, user]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -35,8 +32,8 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login(email, password, loginAs);
-      router.push("/dashboard");
+      const authenticatedUser = await login(email, password);
+      router.push(getPostLoginRoute(authenticatedUser));
     } catch (err) {
       setError("Unable to sign in. Check your credentials and try again.");
       console.error(err);
@@ -63,34 +60,6 @@ export default function LoginPage() {
         loading={loading}
         error={error}
       >
-        <div>
-          <p className="mb-2 text-sm font-medium text-ink">Login as</p>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {[
-              ["admin", "Admin"],
-              ["individual plus", "Individual Plus"],
-              ["individual pro", "Individual Pro"],
-              ["enterprise", "Enterprise"],
-            ].map(([value, label]) => {
-              const active = loginAs === value;
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setLoginAs(value as typeof loginAs)}
-                  className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-                    active
-                      ? "border-pine bg-pine text-white"
-                      : "border-ink/20 bg-white text-ink hover:border-pine/60 hover:bg-pine/5"
-                  }`}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
         <div>
           <label className="mb-1 block text-sm font-medium text-ink" htmlFor="email">
             Email

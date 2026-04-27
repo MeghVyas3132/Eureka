@@ -2,15 +2,19 @@ import uuid
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.api_response import error_payload
 from core.constants import (
-    ERROR_CODE_ACCOUNT_TYPE_MISMATCH,
     ERROR_CODE_EMAIL_EXISTS,
     ERROR_CODE_INVALID_CREDENTIALS,
-    LOGIN_MODE_TO_ROLE_TIER,
+    ERROR_CODE_USERNAME_EXISTS,
+    ROLE_ADMIN,
     ROLE_TO_DEFAULT_TIER,
+    SEED_ADMIN_EMAIL,
+    SEED_ADMIN_PASSWORD,
+    TIER_ADMIN,
 )
 from core.security import (
     create_access_token,
@@ -23,18 +27,115 @@ from models.user import User
 from schemas.auth import LoginRequest, RegisterRequest, TokenPair
 
 
-def _normalize_key(value: str) -> str:
-    return value.strip().lower().replace("_", " ").replace("-", " ")
+def _is_seed_password_valid(user: User) -> bool:
+    try:
+        return verify_password(SEED_ADMIN_PASSWORD, user.hashed_password)
+    except Exception:
+        return False
 
 
-def _resolve_login_mode(login_as: str | None) -> tuple[str, str] | None:
-    if login_as is None:
-        return None
-    return LOGIN_MODE_TO_ROLE_TIER.get(_normalize_key(login_as))
+def _normalize_username(raw_username: str) -> str:
+    return raw_username.strip().lower()
+
+
+def _username_with_suffix(base_username: str, suffix_index: int) -> str:
+    normalized_base = base_username[:64] or "user"
+    if suffix_index <= 1:
+        return normalized_base
+
+    suffix = f"_{suffix_index}"
+    return f"{normalized_base[: max(1, 64 - len(suffix))]}{suffix}"
+
+
+async def _username_exists(
+    db: AsyncSession,
+    username: str,
+    *,
+    exclude_user_id: uuid.UUID | None = None,
+) -> bool:
+    query = select(User.id).where(User.username == username)
+    if exclude_user_id is not None:
+        query = query.where(User.id != exclude_user_id)
+
+    result = await db.execute(query)
+    return result.scalar_one_or_none() is not None
+
+
+async def _resolve_available_username(
+    db: AsyncSession,
+    base_username: str,
+    *,
+    exclude_user_id: uuid.UUID | None = None,
+) -> str:
+    normalized_base = _normalize_username(base_username) or "user"
+    suffix_index = 1
+
+    while True:
+        candidate = _username_with_suffix(normalized_base, suffix_index)
+        if not await _username_exists(db, candidate, exclude_user_id=exclude_user_id):
+            return candidate
+        suffix_index += 1
+
+
+async def ensure_seed_admin_user(db: AsyncSession) -> None:
+    result = await db.execute(select(User).where(User.email == SEED_ADMIN_EMAIL))
+    user = result.scalar_one_or_none()
+
+    should_persist_changes = False
+    if user is None:
+        seed_username = await _resolve_available_username(db, "admin")
+        user = User(
+            email=SEED_ADMIN_EMAIL,
+            username=seed_username,
+            hashed_password=hash_password(SEED_ADMIN_PASSWORD),
+            role=ROLE_ADMIN,
+            subscription_tier=TIER_ADMIN,
+        )
+        db.add(user)
+        should_persist_changes = True
+    else:
+        current_username = _normalize_username(user.username or "")
+        if not current_username:
+            current_username = "admin"
+        resolved_username = await _resolve_available_username(
+            db,
+            current_username,
+            exclude_user_id=user.id,
+        )
+        if user.username != resolved_username:
+            user.username = resolved_username
+            should_persist_changes = True
+        if user.role != ROLE_ADMIN:
+            user.role = ROLE_ADMIN
+            should_persist_changes = True
+        if user.subscription_tier != TIER_ADMIN:
+            user.subscription_tier = TIER_ADMIN
+            should_persist_changes = True
+        if not _is_seed_password_valid(user):
+            user.hashed_password = hash_password(SEED_ADMIN_PASSWORD)
+            should_persist_changes = True
+
+    if not should_persist_changes:
+        return
+
+    try:
+        await db.commit()
+    except IntegrityError:
+        # Handles concurrent requests attempting to seed at the same time.
+        await db.rollback()
 
 
 async def register_user(db: AsyncSession, payload: RegisterRequest) -> User:
+    await ensure_seed_admin_user(db)
+
     email = payload.email.lower()
+    username = _normalize_username(payload.username)
+    if not username:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=error_payload("validation_error", "Username is required."),
+        )
+
     existing = await db.execute(select(User).where(User.email == email))
     if existing.scalar_one_or_none() is not None:
         raise HTTPException(
@@ -42,10 +143,17 @@ async def register_user(db: AsyncSession, payload: RegisterRequest) -> User:
             detail=error_payload(ERROR_CODE_EMAIL_EXISTS, "Email is already registered."),
         )
 
-    subscription_tier = payload.subscription_tier or ROLE_TO_DEFAULT_TIER[payload.role]
+    if await _username_exists(db, username):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=error_payload(ERROR_CODE_USERNAME_EXISTS, "Username is already taken."),
+        )
+
+    subscription_tier = ROLE_TO_DEFAULT_TIER[payload.role]
 
     user = User(
         email=email,
+        username=username,
         hashed_password=hash_password(payload.password),
         role=payload.role,
         subscription_tier=subscription_tier,
@@ -57,6 +165,8 @@ async def register_user(db: AsyncSession, payload: RegisterRequest) -> User:
 
 
 async def authenticate_user(db: AsyncSession, payload: LoginRequest) -> User:
+    await ensure_seed_admin_user(db)
+
     email = payload.email.lower()
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalar_one_or_none()
@@ -66,18 +176,6 @@ async def authenticate_user(db: AsyncSession, payload: LoginRequest) -> User:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=error_payload(ERROR_CODE_INVALID_CREDENTIALS, "Email or password is incorrect."),
         )
-
-    requested_login_mode = _resolve_login_mode(payload.login_as)
-    if requested_login_mode is not None:
-        expected_role, expected_tier = requested_login_mode
-        if user.role != expected_role or user.subscription_tier != expected_tier:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=error_payload(
-                    ERROR_CODE_ACCOUNT_TYPE_MISMATCH,
-                    "The selected login mode does not match this account.",
-                ),
-            )
 
     return user
 

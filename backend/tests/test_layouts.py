@@ -7,43 +7,47 @@ def _auth_header(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
 
 
-async def _register_and_login(client, email: str, password: str, role: str, subscription_tier: str, login_as: str):
+def _username_for_email(email: str) -> str:
+    return email.split("@", 1)[0].replace("-", "_")
+
+
+async def _register_and_login(client, email: str, password: str, role: str):
     register_response = await client.post(
         "/api/v1/auth/register",
         json={
             "email": email,
+            "username": _username_for_email(email),
             "password": password,
             "role": role,
-            "subscription_tier": subscription_tier,
         },
     )
     assert register_response.status_code == 201
 
     login_response = await client.post(
         "/api/v1/auth/login",
-        json={"email": email, "password": password, "login_as": login_as},
+        json={"email": email, "password": password},
     )
     assert login_response.status_code == 200
     return login_response.json()["data"]["tokens"]["access_token"]
 
 
+async def _login_seeded_admin(client):
+    response = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "admin@aexiz.com", "password": "qwerty123"},
+    )
+    assert response.status_code == 200
+    return response.json()["data"]["tokens"]["access_token"]
+
+
 @pytest.mark.anyio
 async def test_layout_creation_is_blocked_when_tier_limit_reached(client):
-    admin_token = await _register_and_login(
-        client,
-        f"admin-{uuid.uuid4()}@example.com",
-        "password123",
-        "admin",
-        "admin",
-        "admin",
-    )
+    admin_token = await _login_seeded_admin(client)
     user_token = await _register_and_login(
         client,
         f"plus-{uuid.uuid4()}@example.com",
         "password123",
         "merchandiser",
-        "individual-plus",
-        "individual plus",
     )
 
     patch_response = await client.patch(
@@ -75,8 +79,6 @@ async def test_enterprise_layout_creation_not_blocked(client):
         client,
         f"ent-{uuid.uuid4()}@example.com",
         "password123",
-        "enterprise",
-        "enterprise",
         "enterprise",
     )
 

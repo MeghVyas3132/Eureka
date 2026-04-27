@@ -6,10 +6,11 @@ import { api } from "@/lib/api";
 
 type UserRole = "admin" | "merchandiser" | "merchandiser-pro" | "enterprise";
 type SubscriptionTier = "admin" | "individual-plus" | "individual-pro" | "enterprise";
-type LoginMode = "admin" | "individual plus" | "individual pro" | "enterprise";
+type SignupRole = "merchandiser" | "merchandiser-pro" | "enterprise";
 
 export interface User {
   id: string;
+  username: string;
   email: string;
   role: UserRole;
   subscription_tier: SubscriptionTier;
@@ -39,13 +40,8 @@ interface RefreshRequest {
 interface AuthStore {
   user: User | null;
   token: string | null;
-  login: (email: string, password: string, loginAs?: LoginMode) => Promise<void>;
-  register: (
-    email: string,
-    password: string,
-    role?: UserRole,
-    subscriptionTier?: SubscriptionTier,
-  ) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
+  register: (username: string, email: string, password: string, role?: SignupRole) => Promise<User>;
   logout: () => void;
   refreshToken: () => Promise<void>;
   initializeAuth: () => void;
@@ -55,6 +51,10 @@ const ACCESS_TOKEN_KEY = "eureka_access_token";
 const REFRESH_TOKEN_KEY = "eureka_refresh_token";
 const USER_KEY = "eureka_user";
 const ACCESS_COOKIE = "eureka_access_token";
+
+export function getPostLoginRoute(user: Pick<User, "role">): "/admin/users" | "/dashboard" {
+  return user.role === "admin" ? "/admin/users" : "/dashboard";
+}
 
 function persistSession(payload: AuthPayload): void {
   window.localStorage.setItem(ACCESS_TOKEN_KEY, payload.tokens.access_token);
@@ -74,11 +74,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   user: null,
   token: null,
 
-  login: async (email: string, password: string, loginAs?: LoginMode): Promise<void> => {
+  login: async (email: string, password: string): Promise<User> => {
     const response = await api.post<AuthApiResponse>("/api/v1/auth/login", {
       email,
       password,
-      login_as: loginAs,
     });
 
     const authData = response.data.data;
@@ -88,19 +87,21 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       user: authData.user,
       token: authData.tokens.access_token,
     });
+
+    return authData.user;
   },
 
   register: async (
+    username: string,
     email: string,
     password: string,
-    role: UserRole = "merchandiser",
-    subscriptionTier?: SubscriptionTier,
-  ): Promise<void> => {
+    role: SignupRole = "merchandiser",
+  ): Promise<User> => {
     const response = await api.post<AuthApiResponse>("/api/v1/auth/register", {
+      username,
       email,
       password,
       role,
-      subscription_tier: subscriptionTier,
     });
 
     const authData = response.data.data;
@@ -110,6 +111,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       user: authData.user,
       token: authData.tokens.access_token,
     });
+
+    return authData.user;
   },
 
   logout: (): void => {

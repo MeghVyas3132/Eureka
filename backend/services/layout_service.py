@@ -46,7 +46,7 @@ async def create_layout_for_user(db: AsyncSession, user: User, payload: LayoutCr
 
     if not decision["allowed"]:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=error_payload(
                 ERROR_CODE_QUOTA_EXCEEDED,
                 {

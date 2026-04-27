@@ -5,20 +5,23 @@ import LoginPage from "@/app/(auth)/login/page";
 
 const pushMock = jest.fn();
 const replaceMock = jest.fn();
-const loginMock = jest.fn().mockResolvedValue(undefined);
+const routerMock = {
+  push: pushMock,
+  replace: replaceMock,
+};
+const loginMock = jest.fn();
 const initializeAuthMock = jest.fn();
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({
-    push: pushMock,
-    replace: replaceMock,
-  }),
+  useRouter: () => routerMock,
 }));
 
 jest.mock("@/store/authStore", () => ({
+  getPostLoginRoute: (user: { role: string }) => (user.role === "admin" ? "/admin/users" : "/dashboard"),
   useAuthStore: () => ({
     login: loginMock,
     token: null,
+    user: null,
     initializeAuth: initializeAuthMock,
   }),
 }));
@@ -28,22 +31,48 @@ describe("LoginPage", () => {
     jest.clearAllMocks();
   });
 
-  it("renders four login modes and passes the selected mode to login", async () => {
-    const user = userEvent.setup();
+  it("logs in with credentials only and routes non-admin users to dashboard", async () => {
+    loginMock.mockResolvedValue({
+      id: "user-id",
+      username: "merch_user",
+      email: "user@example.com",
+      role: "merchandiser",
+      subscription_tier: "individual-plus",
+      created_at: "2026-04-25T00:00:00Z",
+    });
 
+    const user = userEvent.setup();
     render(<LoginPage />);
 
-    expect(screen.getByRole("button", { name: "Admin" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Individual Plus" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Individual Pro" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Enterprise" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Admin" })).not.toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Email"), "user@example.com");
     await user.type(screen.getByLabelText("Password"), "password123");
-    await user.click(screen.getByRole("button", { name: "Individual Pro" }));
     await user.click(screen.getByRole("button", { name: "Sign In" }));
 
-    await waitFor(() => expect(loginMock).toHaveBeenCalledWith("user@example.com", "password123", "individual pro"));
+    await waitFor(() => expect(loginMock).toHaveBeenCalledWith("user@example.com", "password123"));
+    expect(pushMock).toHaveBeenCalledWith("/dashboard");
     expect(initializeAuthMock).toHaveBeenCalled();
+  });
+
+  it("routes admin users to the admin users page after login", async () => {
+    loginMock.mockResolvedValue({
+      id: "admin-id",
+      username: "admin",
+      email: "admin@aexiz.com",
+      role: "admin",
+      subscription_tier: "admin",
+      created_at: "2026-04-25T00:00:00Z",
+    });
+
+    const user = userEvent.setup();
+    render(<LoginPage />);
+
+    await user.type(screen.getByLabelText("Email"), "admin@aexiz.com");
+    await user.type(screen.getByLabelText("Password"), "qwerty123");
+    await user.click(screen.getByRole("button", { name: "Sign In" }));
+
+    await waitFor(() => expect(loginMock).toHaveBeenCalledWith("admin@aexiz.com", "qwerty123"));
+    expect(pushMock).toHaveBeenCalledWith("/admin/users");
   });
 });

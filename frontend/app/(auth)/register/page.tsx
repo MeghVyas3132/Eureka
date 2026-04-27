@@ -5,14 +5,16 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 import AuthCard from "@/components/auth/AuthCard";
-import { useAuthStore } from "@/store/authStore";
+import { getPostLoginRoute, useAuthStore } from "@/store/authStore";
 
 export default function RegisterPage() {
   const router = useRouter();
   const { register } = useAuthStore();
 
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"merchandiser" | "merchandiser-pro" | "enterprise">("merchandiser");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -22,10 +24,10 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await register(email, password, "merchandiser");
-      router.push("/dashboard");
+      const createdUser = await register(username, email, password, role);
+      router.push(getPostLoginRoute(createdUser));
     } catch (err) {
-      setError("Unable to create your account. Try a different email.");
+      setError("Unable to create your account. Try a different username or email.");
       console.error(err);
     } finally {
       setLoading(false);
@@ -50,6 +52,51 @@ export default function RegisterPage() {
         loading={loading}
         error={error}
       >
+        <div>
+          <p className="mb-2 text-sm font-medium text-ink">Choose role</p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            {[
+              ["merchandiser", "Individual Plus"],
+              ["merchandiser-pro", "Individual Pro"],
+              ["enterprise", "Enterprise"],
+            ].map(([value, label]) => {
+              const active = role === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setRole(value as typeof role)}
+                  className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+                    active
+                      ? "border-pine bg-pine text-white"
+                      : "border-ink/20 bg-white text-ink hover:border-pine/60 hover:bg-pine/5"
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-ink" htmlFor="username">
+            Username
+          </label>
+          <input
+            id="username"
+            type="text"
+            required
+            minLength={3}
+            maxLength={64}
+            pattern="^[A-Za-z0-9_]+$"
+            placeholder="e.g. retail_user"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            className="w-full rounded-lg border border-ink/20 px-3 py-2 outline-none ring-pine/30 transition focus:ring"
+          />
+        </div>
+
         <div>
           <label className="mb-1 block text-sm font-medium text-ink" htmlFor="email">
             Email

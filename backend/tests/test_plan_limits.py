@@ -7,27 +7,38 @@ def _auth_header(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
 
 
-async def _register_and_login(client, email: str, password: str, role: str, subscription_tier: str):
+def _username_for_email(email: str) -> str:
+    return email.split("@", 1)[0].replace("-", "_")
+
+
+async def _register_and_login(client, email: str, password: str, role: str):
     await client.post(
         "/api/v1/auth/register",
         json={
             "email": email,
+            "username": _username_for_email(email),
             "password": password,
             "role": role,
-            "subscription_tier": subscription_tier,
         },
     )
     response = await client.post(
         "/api/v1/auth/login",
-        json={"email": email, "password": password, "login_as": "admin" if role == "admin" else "individual plus"},
+        json={"email": email, "password": password},
+    )
+    return response.json()["data"]["tokens"]["access_token"]
+
+
+async def _login_seeded_admin(client):
+    response = await client.post(
+        "/api/v1/auth/login",
+        json={"email": "admin@aexiz.com", "password": "qwerty123"},
     )
     return response.json()["data"]["tokens"]["access_token"]
 
 
 @pytest.mark.anyio
 async def test_admin_can_list_plan_limits(client):
-    email = f"admin-{uuid.uuid4()}@example.com"
-    token = await _register_and_login(client, email, "password123", "admin", "admin")
+    token = await _login_seeded_admin(client)
 
     response = await client.get("/api/v1/admin/plan-limits", headers=_auth_header(token))
 
@@ -39,20 +50,7 @@ async def test_admin_can_list_plan_limits(client):
 @pytest.mark.anyio
 async def test_non_admin_cannot_list_plan_limits(client):
     email = f"user-{uuid.uuid4()}@example.com"
-    await client.post(
-        "/api/v1/auth/register",
-        json={
-            "email": email,
-            "password": "password123",
-            "role": "merchandiser",
-            "subscription_tier": "individual-plus",
-        },
-    )
-    login_response = await client.post(
-        "/api/v1/auth/login",
-        json={"email": email, "password": "password123", "login_as": "individual plus"},
-    )
-    token = login_response.json()["data"]["tokens"]["access_token"]
+    token = await _register_and_login(client, email, "password123", "merchandiser")
 
     response = await client.get("/api/v1/admin/plan-limits", headers=_auth_header(token))
 
