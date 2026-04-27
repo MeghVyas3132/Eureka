@@ -13,9 +13,6 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loginAs, setLoginAs] = useState<"admin" | "individual plus" | "individual pro" | "enterprise">(
-    "individual plus",
-  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -35,7 +32,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login(email, password, loginAs);
+      await login(email, password);
       router.push("/dashboard");
     } catch (err) {
       setError("Unable to sign in. Check your credentials and try again.");
@@ -63,34 +60,6 @@ export default function LoginPage() {
         loading={loading}
         error={error}
       >
-        <div>
-          <p className="mb-2 text-sm font-medium text-ink">Login as</p>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {[
-              ["admin", "Admin"],
-              ["individual plus", "Individual Plus"],
-              ["individual pro", "Individual Pro"],
-              ["enterprise", "Enterprise"],
-            ].map(([value, label]) => {
-              const active = loginAs === value;
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setLoginAs(value as typeof loginAs)}
-                  className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-                    active
-                      ? "border-pine bg-pine text-white"
-                      : "border-ink/20 bg-white text-ink hover:border-pine/60 hover:bg-pine/5"
-                  }`}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
         <div>
           <label className="mb-1 block text-sm font-medium text-ink" htmlFor="email">
             Email

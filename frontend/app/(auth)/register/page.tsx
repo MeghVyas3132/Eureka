@@ -13,6 +13,7 @@ export default function RegisterPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"merchandiser" | "merchandiser-pro" | "enterprise">("merchandiser");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -22,7 +23,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await register(email, password, "merchandiser");
+      await register(email, password, role);
       router.push("/dashboard");
     } catch (err) {
       setError("Unable to create your account. Try a different email.");
@@ -50,6 +51,33 @@ export default function RegisterPage() {
         loading={loading}
         error={error}
       >
+        <div>
+          <p className="mb-2 text-sm font-medium text-ink">Choose role</p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            {[
+              ["merchandiser", "Individual Plus"],
+              ["merchandiser-pro", "Individual Pro"],
+              ["enterprise", "Enterprise"],
+            ].map(([value, label]) => {
+              const active = role === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setRole(value as typeof role)}
+                  className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+                    active
+                      ? "border-pine bg-pine text-white"
+                      : "border-ink/20 bg-white text-ink hover:border-pine/60 hover:bg-pine/5"
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div>
           <label className="mb-1 block text-sm font-medium text-ink" htmlFor="email">
             Email

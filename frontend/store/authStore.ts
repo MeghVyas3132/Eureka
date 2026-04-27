@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 
 type UserRole = "admin" | "merchandiser" | "merchandiser-pro" | "enterprise";
 type SubscriptionTier = "admin" | "individual-plus" | "individual-pro" | "enterprise";
-type LoginMode = "admin" | "individual plus" | "individual pro" | "enterprise";
+type SignupRole = "merchandiser" | "merchandiser-pro" | "enterprise";
 
 export interface User {
   id: string;
@@ -39,13 +39,8 @@ interface RefreshRequest {
 interface AuthStore {
   user: User | null;
   token: string | null;
-  login: (email: string, password: string, loginAs?: LoginMode) => Promise<void>;
-  register: (
-    email: string,
-    password: string,
-    role?: UserRole,
-    subscriptionTier?: SubscriptionTier,
-  ) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, role?: SignupRole) => Promise<void>;
   logout: () => void;
   refreshToken: () => Promise<void>;
   initializeAuth: () => void;
@@ -74,11 +69,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   user: null,
   token: null,
 
-  login: async (email: string, password: string, loginAs?: LoginMode): Promise<void> => {
+  login: async (email: string, password: string): Promise<void> => {
     const response = await api.post<AuthApiResponse>("/api/v1/auth/login", {
       email,
       password,
-      login_as: loginAs,
     });
 
     const authData = response.data.data;
@@ -93,14 +87,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   register: async (
     email: string,
     password: string,
-    role: UserRole = "merchandiser",
-    subscriptionTier?: SubscriptionTier,
+    role: SignupRole = "merchandiser",
   ): Promise<void> => {
     const response = await api.post<AuthApiResponse>("/api/v1/auth/register", {
       email,
       password,
       role,
-      subscription_tier: subscriptionTier,
     });
 
     const authData = response.data.data;
