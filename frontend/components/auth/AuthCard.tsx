@@ -24,7 +24,7 @@ export default function AuthCard({
   children,
 }: AuthCardProps) {
   return (
-    <div className="w-full max-w-md rounded-2xl border border-pine/20 bg-white/90 p-8 shadow-xl backdrop-blur-sm">
+    <div className="w-full max-w-md rounded-2xl border border-pink-200 bg-white/95 p-8 shadow-xl backdrop-blur-sm">
       <h1 className="text-2xl font-bold text-ink">{title}</h1>
       <p className="mt-2 text-sm text-ink/70">{subtitle}</p>
 
@@ -36,7 +36,7 @@ export default function AuthCard({
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-pine px-4 py-2 font-semibold text-white transition hover:bg-pine/90 disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full rounded-lg bg-pink-600 px-4 py-2 font-semibold text-white transition hover:bg-pink-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? "Please wait..." : ctaLabel}
         </button>

@@ -4,7 +4,11 @@ const AUTH_COOKIE_NAME = "eureka_access_token";
 
 function isProtectedPath(pathname: string): boolean {
   return (
-    pathname.startsWith("/dashboard") || pathname.startsWith("/store") || pathname.startsWith("/products")
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/super-admin") ||
+    pathname.startsWith("/store") ||
+    pathname.startsWith("/products")
   );
 }
 
@@ -30,5 +34,13 @@ export function middleware(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/store/:path*", "/products/:path*", "/login", "/register"],
+  matcher: [
+    "/dashboard/:path*",
+    "/admin/:path*",
+    "/super-admin/:path*",
+    "/store/:path*",
+    "/products/:path*",
+    "/login",
+    "/register",
+  ],
 };
