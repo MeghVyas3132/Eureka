@@ -11,27 +11,43 @@ def _username_for_email(email: str) -> str:
     return email.split("@", 1)[0].replace("-", "_")
 
 
-async def _register_and_login(client, email: str, password: str, role: str):
-    await client.post(
-        "/api/v1/auth/register",
-        json={
-            "email": email,
-            "username": _username_for_email(email),
-            "password": password,
-            "role": role,
-        },
-    )
-    response = await client.post(
-        "/api/v1/auth/login",
-        json={"email": email, "password": password},
-    )
-    return response.json()["data"]["tokens"]["access_token"]
+def _register_payload(email: str, password: str, role: str) -> dict:
+    return {
+        "first_name": "Plan",
+        "last_name": "Tester",
+        "email": email,
+        "username": _username_for_email(email),
+        "company_name": "Plan Inc",
+        "phone_number": "1234567890",
+        "password": password,
+        "role": role,
+    }
 
 
 async def _login_seeded_admin(client):
     response = await client.post(
         "/api/v1/auth/login",
         json={"email": "admin@aexiz.com", "password": "qwerty123"},
+    )
+    return response.json()["data"]["tokens"]["access_token"]
+
+
+async def _register_and_login(client, email: str, password: str, role: str):
+    register_response = await client.post(
+        "/api/v1/auth/register",
+        json=_register_payload(email, password, role),
+    )
+    user_id = register_response.json()["data"]["user"]["id"]
+    admin_token = await _login_seeded_admin(client)
+    approval_response = await client.patch(
+        f"/api/v1/admin/onboarding/requests/{user_id}",
+        json={"status": "approved", "review_note": "Approved for limits test"},
+        headers=_auth_header(admin_token),
+    )
+    assert approval_response.status_code == 200
+    response = await client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": password},
     )
     return response.json()["data"]["tokens"]["access_token"]
 

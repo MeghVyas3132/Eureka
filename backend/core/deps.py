@@ -7,6 +7,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.api_response import error_payload
+from core.constants import (
+    APPROVAL_APPROVED,
+    ERROR_CODE_ACCOUNT_PENDING_APPROVAL,
+    ROLE_ADMIN,
+)
 from core.security import decode_token, oauth2_scheme
 from db.session import get_db
 from models.user import User
@@ -44,6 +49,14 @@ async def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=error_payload("user_not_found", "Token user does not exist."),
+        )
+    if user.role != ROLE_ADMIN and user.approval_status != APPROVAL_APPROVED:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=error_payload(
+                ERROR_CODE_ACCOUNT_PENDING_APPROVAL,
+                "Your account is not approved for access.",
+            ),
         )
 
     return user

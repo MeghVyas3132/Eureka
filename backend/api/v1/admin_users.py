@@ -21,10 +21,17 @@ async def list_users(
     query = (
         select(
             User.id,
+            User.first_name,
+            User.last_name,
             User.username,
             User.email,
+            User.company_name,
+            User.phone_number,
             User.role,
             User.subscription_tier,
+            User.approval_status,
+            User.reviewed_at,
+            User.review_note,
             User.created_at,
             func.count(Layout.id).label("layout_count"),
         )

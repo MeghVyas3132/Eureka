@@ -22,7 +22,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (user?.role === "admin") {
-      router.replace("/admin/users");
+      router.replace("/super-admin");
     }
   }, [router, user?.role]);
 

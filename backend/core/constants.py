@@ -18,6 +18,14 @@ TIER_ENTERPRISE = "enterprise"
 VALID_TIERS = [TIER_ADMIN, TIER_INDIVIDUAL_PLUS, TIER_INDIVIDUAL_PRO, TIER_ENTERPRISE]
 TIER_TYPE = Literal["admin", "individual-plus", "individual-pro", "enterprise"]
 
+APPROVAL_PENDING = "pending"
+APPROVAL_APPROVED = "approved"
+APPROVAL_REJECTED = "rejected"
+
+VALID_APPROVAL_STATUSES = [APPROVAL_PENDING, APPROVAL_APPROVED, APPROVAL_REJECTED]
+APPROVAL_STATUS_TYPE = Literal["pending", "approved", "rejected"]
+APPROVAL_STATUS_FILTER_TYPE = Literal["pending", "approved", "rejected", "all"]
+
 ROLE_TO_DEFAULT_TIER = {
     ROLE_ADMIN: TIER_ADMIN,
     ROLE_MERCHANDISER: TIER_INDIVIDUAL_PLUS,
@@ -39,5 +47,7 @@ ERROR_CODE_QUOTA_EXCEEDED = "quota_exceeded"
 ERROR_CODE_INVALID_CREDENTIALS = "invalid_credentials"
 ERROR_CODE_EMAIL_EXISTS = "email_exists"
 ERROR_CODE_USERNAME_EXISTS = "username_exists"
+ERROR_CODE_ACCOUNT_PENDING_APPROVAL = "account_pending_approval"
+ERROR_CODE_ACCOUNT_REJECTED = "account_rejected"
 ERROR_CODE_UNAUTHORIZED = "unauthorized"
 ERROR_CODE_FORBIDDEN = "forbidden"

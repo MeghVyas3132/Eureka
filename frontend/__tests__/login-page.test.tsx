@@ -14,10 +14,14 @@ const initializeAuthMock = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => routerMock,
+  useSearchParams: () =>
+    ({
+      get: () => null,
+    }) as URLSearchParams,
 }));
 
 jest.mock("@/store/authStore", () => ({
-  getPostLoginRoute: (user: { role: string }) => (user.role === "admin" ? "/admin/users" : "/dashboard"),
+  getPostLoginRoute: (user: { role: string }) => (user.role === "admin" ? "/super-admin" : "/dashboard"),
   useAuthStore: () => ({
     login: loginMock,
     token: null,
@@ -34,10 +38,15 @@ describe("LoginPage", () => {
   it("logs in with credentials only and routes non-admin users to dashboard", async () => {
     loginMock.mockResolvedValue({
       id: "user-id",
+      first_name: "Store",
+      last_name: "User",
       username: "merch_user",
       email: "user@example.com",
+      company_name: "Retail Co",
+      phone_number: "1234567890",
       role: "merchandiser",
       subscription_tier: "individual-plus",
+      approval_status: "approved",
       created_at: "2026-04-25T00:00:00Z",
     });
 
@@ -55,13 +64,18 @@ describe("LoginPage", () => {
     expect(initializeAuthMock).toHaveBeenCalled();
   });
 
-  it("routes admin users to the admin users page after login", async () => {
+  it("routes admin users to the super admin page after login", async () => {
     loginMock.mockResolvedValue({
       id: "admin-id",
+      first_name: "Super",
+      last_name: "Admin",
       username: "admin",
       email: "admin@aexiz.com",
+      company_name: "Eureka",
+      phone_number: null,
       role: "admin",
       subscription_tier: "admin",
+      approval_status: "approved",
       created_at: "2026-04-25T00:00:00Z",
     });
 
@@ -73,6 +87,6 @@ describe("LoginPage", () => {
     await user.click(screen.getByRole("button", { name: "Sign In" }));
 
     await waitFor(() => expect(loginMock).toHaveBeenCalledWith("admin@aexiz.com", "qwerty123"));
-    expect(pushMock).toHaveBeenCalledWith("/admin/users");
+    expect(pushMock).toHaveBeenCalledWith("/super-admin");
   });
 });

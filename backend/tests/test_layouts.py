@@ -11,24 +11,17 @@ def _username_for_email(email: str) -> str:
     return email.split("@", 1)[0].replace("-", "_")
 
 
-async def _register_and_login(client, email: str, password: str, role: str):
-    register_response = await client.post(
-        "/api/v1/auth/register",
-        json={
-            "email": email,
-            "username": _username_for_email(email),
-            "password": password,
-            "role": role,
-        },
-    )
-    assert register_response.status_code == 201
-
-    login_response = await client.post(
-        "/api/v1/auth/login",
-        json={"email": email, "password": password},
-    )
-    assert login_response.status_code == 200
-    return login_response.json()["data"]["tokens"]["access_token"]
+def _register_payload(email: str, role: str, password: str) -> dict:
+    return {
+        "first_name": "Layout",
+        "last_name": "Tester",
+        "email": email,
+        "username": _username_for_email(email),
+        "company_name": "Layout Inc",
+        "phone_number": "1234567890",
+        "password": password,
+        "role": role,
+    }
 
 
 async def _login_seeded_admin(client):
@@ -38,6 +31,30 @@ async def _login_seeded_admin(client):
     )
     assert response.status_code == 200
     return response.json()["data"]["tokens"]["access_token"]
+
+
+async def _register_and_login(client, email: str, password: str, role: str):
+    register_response = await client.post(
+        "/api/v1/auth/register",
+        json=_register_payload(email, role, password),
+    )
+    assert register_response.status_code == 201
+    user_id = register_response.json()["data"]["user"]["id"]
+
+    admin_token = await _login_seeded_admin(client)
+    approval_response = await client.patch(
+        f"/api/v1/admin/onboarding/requests/{user_id}",
+        json={"status": "approved", "review_note": "Approved for layout testing"},
+        headers=_auth_header(admin_token),
+    )
+    assert approval_response.status_code == 200
+
+    login_response = await client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert login_response.status_code == 200
+    return login_response.json()["data"]["tokens"]["access_token"]
 
 
 @pytest.mark.anyio

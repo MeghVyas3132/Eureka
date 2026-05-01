@@ -5,16 +5,19 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 import AuthCard from "@/components/auth/AuthCard";
-import { getPostLoginRoute, useAuthStore } from "@/store/authStore";
+import { useAuthStore } from "@/store/authStore";
 
 export default function RegisterPage() {
   const router = useRouter();
   const { register } = useAuthStore();
 
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"merchandiser" | "merchandiser-pro" | "enterprise">("merchandiser");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -24,10 +27,19 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const createdUser = await register(username, email, password, role);
-      router.push(getPostLoginRoute(createdUser));
+      await register({
+        first_name: firstName,
+        last_name: lastName,
+        username,
+        company_name: companyName,
+        email,
+        phone_number: phoneNumber,
+        password,
+        role: "merchandiser",
+      });
+      router.push("/login?approval=pending");
     } catch (err) {
-      setError("Unable to create your account. Try a different username or email.");
+      setError("Unable to submit signup request. Try a different username or email.");
       console.error(err);
     } finally {
       setLoading(false);
@@ -35,16 +47,16 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-6">
+    <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
       <AuthCard
-        title="Create Account"
-        subtitle="Start building store layouts and tracking sales performance."
-        ctaLabel="Register"
+        title="Sign Up"
+        subtitle="Register your workspace. Admin approval is required before first login."
+        ctaLabel="Submit Request"
         footer={
           <>
-            Already have an account?{" "}
-            <Link href="/login" className="font-semibold text-pine underline-offset-4 hover:underline">
-              Sign in
+            Already registered?{" "}
+            <Link href="/login" className="font-semibold text-pink-600 underline-offset-4 hover:underline">
+              Go to login
             </Link>
           </>
         }
@@ -52,30 +64,34 @@ export default function RegisterPage() {
         loading={loading}
         error={error}
       >
-        <div>
-          <p className="mb-2 text-sm font-medium text-ink">Choose role</p>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-            {[
-              ["merchandiser", "Individual Plus"],
-              ["merchandiser-pro", "Individual Pro"],
-              ["enterprise", "Enterprise"],
-            ].map(([value, label]) => {
-              const active = role === value;
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setRole(value as typeof role)}
-                  className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-                    active
-                      ? "border-pine bg-pine text-white"
-                      : "border-ink/20 bg-white text-ink hover:border-pine/60 hover:bg-pine/5"
-                  }`}
-                >
-                  {label}
-                </button>
-              );
-            })}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-ink" htmlFor="firstName">
+              First Name
+            </label>
+            <input
+              id="firstName"
+              type="text"
+              required
+              maxLength={80}
+              value={firstName}
+              onChange={(event) => setFirstName(event.target.value)}
+              className="w-full rounded-lg border border-ink/20 px-3 py-2 outline-none ring-pink-200 transition focus:ring"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-ink" htmlFor="lastName">
+              Last Name
+            </label>
+            <input
+              id="lastName"
+              type="text"
+              required
+              maxLength={80}
+              value={lastName}
+              onChange={(event) => setLastName(event.target.value)}
+              className="w-full rounded-lg border border-ink/20 px-3 py-2 outline-none ring-pink-200 transition focus:ring"
+            />
           </div>
         </div>
 
@@ -93,22 +109,53 @@ export default function RegisterPage() {
             placeholder="e.g. retail_user"
             value={username}
             onChange={(event) => setUsername(event.target.value)}
-            className="w-full rounded-lg border border-ink/20 px-3 py-2 outline-none ring-pine/30 transition focus:ring"
+            className="w-full rounded-lg border border-ink/20 px-3 py-2 outline-none ring-pink-200 transition focus:ring"
           />
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-ink" htmlFor="email">
-            Email
+          <label className="mb-1 block text-sm font-medium text-ink" htmlFor="companyName">
+            Company Name
           </label>
           <input
-            id="email"
-            type="email"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className="w-full rounded-lg border border-ink/20 px-3 py-2 outline-none ring-pine/30 transition focus:ring"
+            id="companyName"
+            type="text"
+            maxLength={160}
+            value={companyName}
+            onChange={(event) => setCompanyName(event.target.value)}
+            className="w-full rounded-lg border border-ink/20 px-3 py-2 outline-none ring-pink-200 transition focus:ring"
           />
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-ink" htmlFor="email">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className="w-full rounded-lg border border-ink/20 px-3 py-2 outline-none ring-pink-200 transition focus:ring"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-ink" htmlFor="phoneNumber">
+              Phone Number
+            </label>
+            <input
+              id="phoneNumber"
+              type="tel"
+              required
+              minLength={7}
+              maxLength={32}
+              value={phoneNumber}
+              onChange={(event) => setPhoneNumber(event.target.value)}
+              className="w-full rounded-lg border border-ink/20 px-3 py-2 outline-none ring-pink-200 transition focus:ring"
+            />
+          </div>
         </div>
 
         <div>
@@ -122,7 +169,7 @@ export default function RegisterPage() {
             minLength={8}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded-lg border border-ink/20 px-3 py-2 outline-none ring-pine/30 transition focus:ring"
+            className="w-full rounded-lg border border-ink/20 px-3 py-2 outline-none ring-pink-200 transition focus:ring"
           />
         </div>
       </AuthCard>
