@@ -28,22 +28,16 @@ describe("LoginPage", () => {
     jest.clearAllMocks();
   });
 
-  it("renders four login modes and passes the selected mode to login", async () => {
+  it("signs in with email and password", async () => {
     const user = userEvent.setup();
 
     render(<LoginPage />);
 
-    expect(screen.getByRole("button", { name: "Admin" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Individual Plus" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Individual Pro" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Enterprise" })).toBeInTheDocument();
-
     await user.type(screen.getByLabelText("Email"), "user@example.com");
     await user.type(screen.getByLabelText("Password"), "password123");
-    await user.click(screen.getByRole("button", { name: "Individual Pro" }));
     await user.click(screen.getByRole("button", { name: "Sign In" }));
 
-    await waitFor(() => expect(loginMock).toHaveBeenCalledWith("user@example.com", "password123", "individual pro"));
+    await waitFor(() => expect(loginMock).toHaveBeenCalledWith("user@example.com", "password123"));
     expect(initializeAuthMock).toHaveBeenCalled();
   });
 });

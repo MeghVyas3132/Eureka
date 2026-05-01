@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import DateTime, String, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Uuid
 
 from core.constants import ROLE_MERCHANDISER, TIER_INDIVIDUAL_PLUS
@@ -26,4 +26,10 @@ class User(Base):
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
+    )
+
+    stores: Mapped[list["Store"]] = relationship(
+        "Store",
+        back_populates="user",
+        cascade="all, delete-orphan",
     )
