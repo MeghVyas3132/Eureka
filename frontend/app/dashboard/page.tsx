@@ -47,6 +47,13 @@ export default function DashboardPage() {
           </button>
           <button
             type="button"
+            onClick={() => router.push("/account")}
+            className="rounded-lg border border-ink/30 px-4 py-2 text-sm font-semibold text-ink"
+          >
+            Account
+          </button>
+          <button
+            type="button"
             onClick={() => {
               logout();
               router.push("/login");

@@ -68,6 +68,13 @@ const PLAN_LABELS: Record<PlanTier, string> = {
   enterprise: "Enterprise",
 };
 
+const ROLE_LABELS: Record<SuperAdminUserRow["role"], string> = {
+  admin: "Admin",
+  merchandiser: "Individual Plus",
+  "merchandiser-pro": "Individual Pro",
+  enterprise: "Enterprise",
+};
+
 const STATUS_STYLES: Record<SuperAdminUserRow["approval_status"], string> = {
   approved: "bg-green-100 text-green-700",
   pending: "bg-yellow-100 text-yellow-800",
@@ -348,6 +355,8 @@ export default function SuperAdminPage() {
                     <th className="px-3 py-2">Email</th>
                     <th className="px-3 py-2">Phone</th>
                     <th className="px-3 py-2">Company</th>
+                    <th className="px-3 py-2">Role</th>
+                    <th className="px-3 py-2">Plan</th>
                     <th className="px-3 py-2">Status</th>
                   </tr>
                 </thead>
@@ -360,6 +369,8 @@ export default function SuperAdminPage() {
                       <td className="px-3 py-2">{row.email}</td>
                       <td className="px-3 py-2">{row.phone_number || "-"}</td>
                       <td className="px-3 py-2">{row.company_name || "-"}</td>
+                      <td className="px-3 py-2">{ROLE_LABELS[row.role]}</td>
+                      <td className="px-3 py-2">{PLAN_LABELS[row.subscription_tier]}</td>
                       <td className="px-3 py-2">
                         <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_STYLES[row.approval_status]}`}>
                           {row.approval_status.toUpperCase()}
