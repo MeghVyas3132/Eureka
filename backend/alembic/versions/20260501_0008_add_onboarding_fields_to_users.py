@@ -1,7 +1,7 @@
 """add onboarding fields to users
 
-Revision ID: 20260501_0006
-Revises: 20260427_0005
+Revision ID: 20260501_0008
+Revises: 20260501_0007, 20260427_0005
 Create Date: 2026-05-01 00:00:05
 """
 
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = "20260501_0006"
-down_revision = "20260427_0005"
+revision = "20260501_0008"
+down_revision = ("20260501_0007", "20260427_0005")
 branch_labels = None
 depends_on = None
 

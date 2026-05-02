@@ -13,6 +13,7 @@ from core.constants import (
 from core.deps import require_role
 from db.session import get_db
 from models.layout import Layout
+from models.store import Store
 from models.user import User
 from schemas.admin_onboarding import OnboardingDecisionRequest, OnboardingDecisionResponseData
 from schemas.user import AdminUserRead
@@ -38,7 +39,8 @@ def _user_with_layout_count_query():
             User.created_at,
             func.count(Layout.id).label("layout_count"),
         )
-        .outerjoin(Layout, Layout.user_id == User.id)
+        .outerjoin(Store, Store.user_id == User.id)
+        .outerjoin(Layout, Layout.store_id == Store.id)
         .group_by(User.id)
     )
 

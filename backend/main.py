@@ -23,6 +23,18 @@ app.add_middleware(
 )
 
 
+@app.get("/")
+async def root() -> dict:
+    return success_response(
+        {
+            "service": "Eureka MVP API",
+            "docs_url": "/docs",
+            "health_url": "/api/v1/health",
+        },
+        "Backend is running.",
+    )
+
+
 @app.exception_handler(HTTPException)
 async def http_exception_handler(_, exc: HTTPException) -> JSONResponse:
     if isinstance(exc.detail, dict) and "error" in exc.detail and "detail" in exc.detail:
@@ -41,6 +53,11 @@ async def validation_exception_handler(_, exc: RequestValidationError) -> JSONRe
 @app.get("/api/v1/health")
 async def health_check() -> dict:
     return success_response({"status": "ok"}, "Service is healthy.")
+
+
+@app.get("/health")
+async def health_check_alias() -> dict:
+    return await health_check()
 
 
 app.include_router(api_v1_router)

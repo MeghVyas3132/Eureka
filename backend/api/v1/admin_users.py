@@ -7,6 +7,7 @@ from core.constants import ROLE_ADMIN
 from core.deps import require_role
 from db.session import get_db
 from models.layout import Layout
+from models.store import Store
 from models.user import User
 from schemas.user import AdminUserRead
 
@@ -35,7 +36,8 @@ async def list_users(
             User.created_at,
             func.count(Layout.id).label("layout_count"),
         )
-        .outerjoin(Layout, Layout.user_id == User.id)
+        .outerjoin(Store, Store.user_id == User.id)
+        .outerjoin(Layout, Layout.store_id == Store.id)
         .group_by(User.id)
         .order_by(User.created_at.desc())
     )

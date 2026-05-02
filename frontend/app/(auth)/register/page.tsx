@@ -11,6 +11,14 @@ export default function RegisterPage() {
   const router = useRouter();
   const { register } = useAuthStore();
 
+  type SignupRole = "merchandiser" | "merchandiser-pro" | "enterprise";
+
+  const PLAN_OPTIONS: { id: SignupRole; label: string }[] = [
+    { id: "merchandiser", label: "Individual Plus" },
+    { id: "merchandiser-pro", label: "Individual Pro" },
+    { id: "enterprise", label: "Enterprise" },
+  ];
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
@@ -18,6 +26,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
+  const [selectedRole, setSelectedRole] = useState<SignupRole>("merchandiser");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -35,7 +44,7 @@ export default function RegisterPage() {
         email,
         phone_number: phoneNumber,
         password,
-        role: "merchandiser",
+        role: selectedRole,
       });
       router.push("/login?approval=pending");
     } catch (err) {
@@ -64,6 +73,30 @@ export default function RegisterPage() {
         loading={loading}
         error={error}
       >
+        <div>
+          <p className="text-sm font-medium text-ink">Choose role</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {PLAN_OPTIONS.map((option) => {
+              const isSelected = option.id === selectedRole;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => setSelectedRole(option.id)}
+                  aria-pressed={isSelected}
+                  className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+                    isSelected
+                      ? "border-emerald-700 bg-emerald-700 text-white"
+                      : "border-ink/20 bg-white text-ink hover:border-emerald-300"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-sm font-medium text-ink" htmlFor="firstName">
