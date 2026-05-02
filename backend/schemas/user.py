@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -22,7 +23,25 @@ class UserRead(BaseModel):
     created_at: datetime
 
 
+class UserPlanLimitRead(BaseModel):
+    annual_planogram_limit: int | None
+    is_unlimited: bool
+    source: Literal["tier", "override"]
+
+
 class AdminUserRead(UserRead):
     layout_count: int = Field(ge=0)
     reviewed_at: datetime | None = None
     review_note: str | None = None
+    plan_limit: UserPlanLimitRead
+
+
+class AdminUserPlanLimitUpdate(BaseModel):
+    annual_planogram_limit: int | None = Field(default=None, ge=1)
+    is_unlimited: bool | None = None
+    use_tier_default: bool = False
+
+
+class AdminUserPlanLimitResponse(BaseModel):
+    user_id: uuid.UUID
+    plan_limit: UserPlanLimitRead

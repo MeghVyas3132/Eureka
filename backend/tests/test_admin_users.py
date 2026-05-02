@@ -50,6 +50,21 @@ async def _register_and_login(client, email: str, password: str, role: str) -> s
     return await _login(client, email, password)
 
 
+async def _create_store(client, token: str):
+    response = await client.post(
+        "/api/v1/stores",
+        headers=_auth_header(token),
+        json={
+            "name": "Admin User Store",
+            "width_m": 20,
+            "height_m": 15,
+            "store_type": "supermarket",
+        },
+    )
+    assert response.status_code == 201
+    return response.json()
+
+
 async def _login_seeded_admin(client) -> str:
     return await _login(client, "admin@aexiz.com", "qwerty123")
 
@@ -65,14 +80,15 @@ async def test_admin_can_list_users_with_layout_counts(client):
     enterprise_email = f"enterprise-{uuid.uuid4()}@example.com"
     await _register_user(client, enterprise_email, "password123", "enterprise")
 
+    store = await _create_store(client, merch_token)
     first_layout_response = await client.post(
         "/api/v1/layouts",
-        json={"name": "Layout 1"},
+        json={"store_id": store["id"], "name": "Layout 1"},
         headers=_auth_header(merch_token),
     )
     second_layout_response = await client.post(
         "/api/v1/layouts",
-        json={"name": "Layout 2"},
+        json={"store_id": store["id"], "name": "Layout 2"},
         headers=_auth_header(merch_token),
     )
     assert first_layout_response.status_code == 201
@@ -93,8 +109,56 @@ async def test_admin_can_list_users_with_layout_counts(client):
     assert merch_record["subscription_tier"] == "individual-plus"
     assert merch_record["approval_status"] == "approved"
     assert merch_record["layout_count"] == 2
+    assert merch_record["plan_limit"] == {
+        "annual_planogram_limit": 15,
+        "is_unlimited": False,
+        "source": "tier",
+    }
     assert "password" not in merch_record
     assert "hashed_password" not in merch_record
+
+
+@pytest.mark.anyio
+async def test_admin_can_update_user_plan_limit_override_and_reset_to_tier_default(client):
+    admin_token = await _login_seeded_admin(client)
+    merch_email = f"limit-{uuid.uuid4()}@example.com"
+    user = await _register_user(client, merch_email, "password123", "merchandiser")
+
+    limited_response = await client.patch(
+        f"/api/v1/admin/users/{user['id']}/plan-limit",
+        headers=_auth_header(admin_token),
+        json={"annual_planogram_limit": 7, "is_unlimited": False},
+    )
+    assert limited_response.status_code == 200
+    assert limited_response.json()["data"]["plan_limit"] == {
+        "annual_planogram_limit": 7,
+        "is_unlimited": False,
+        "source": "override",
+    }
+
+    unlimited_response = await client.patch(
+        f"/api/v1/admin/users/{user['id']}/plan-limit",
+        headers=_auth_header(admin_token),
+        json={"is_unlimited": True},
+    )
+    assert unlimited_response.status_code == 200
+    assert unlimited_response.json()["data"]["plan_limit"] == {
+        "annual_planogram_limit": None,
+        "is_unlimited": True,
+        "source": "override",
+    }
+
+    reset_response = await client.patch(
+        f"/api/v1/admin/users/{user['id']}/plan-limit",
+        headers=_auth_header(admin_token),
+        json={"use_tier_default": True},
+    )
+    assert reset_response.status_code == 200
+    assert reset_response.json()["data"]["plan_limit"] == {
+        "annual_planogram_limit": 15,
+        "is_unlimited": False,
+        "source": "tier",
+    }
 
 
 @pytest.mark.anyio

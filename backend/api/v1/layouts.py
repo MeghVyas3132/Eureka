@@ -1,10 +1,12 @@
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from core.api_response import error_payload
+from core.constants import ERROR_CODE_QUOTA_EXCEEDED
 from core.deps import get_current_user
 from db.session import get_db
 from models.layout import Layout, LayoutVersion
@@ -19,6 +21,8 @@ from schemas.layout import (
     LayoutVersionListResponse,
 )
 from services import layout_service
+from services.plan_limit_service import get_effective_plan_limit_for_user
+from services.quota_service import evaluate_planogram_quota
 
 router = APIRouter(prefix="/api/v1/layouts", tags=["layouts"])
 
@@ -37,6 +41,15 @@ async def get_layout_with_auth(layout_id: uuid.UUID, current_user: User, db: Asy
     if not layout:
         raise HTTPException(status_code=404, detail="Layout not found")
     return layout
+
+
+async def get_user_layout_count(db: AsyncSession, user_id: uuid.UUID) -> int:
+    result = await db.execute(
+        select(func.count(Layout.id))
+        .join(Store, Layout.store_id == Store.id)
+        .where(Store.user_id == user_id)
+    )
+    return int(result.scalar_one() or 0)
 
 
 @router.get("", response_model=LayoutListResponse)
@@ -70,6 +83,25 @@ async def create_layout(
     )
     if not store_result.scalar_one_or_none():
         raise HTTPException(status_code=404, detail="Store not found")
+
+    plan_limit = await get_effective_plan_limit_for_user(db, current_user)
+    quota = evaluate_planogram_quota(
+        current_count=await get_user_layout_count(db, current_user.id),
+        annual_planogram_limit=plan_limit["annual_planogram_limit"],
+        is_unlimited=plan_limit["is_unlimited"],
+    )
+    if not quota["allowed"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=error_payload(
+                ERROR_CODE_QUOTA_EXCEEDED,
+                {
+                    "message": "Annual planogram limit reached for this user.",
+                    "limit": quota["limit"],
+                    "remaining": quota["remaining"],
+                },
+            ),
+        )
 
     layout = Layout(store_id=data.store_id, name=data.name)
     db.add(layout)

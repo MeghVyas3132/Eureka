@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, String, func
+from sqlalchemy import Boolean, DateTime, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Uuid
 
@@ -27,6 +27,8 @@ class User(Base):
         default=TIER_INDIVIDUAL_PLUS,
         index=True,
     )
+    annual_planogram_limit_override: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    is_unlimited_override: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     approval_status: Mapped[str] = mapped_column(String(16), nullable=False, default=APPROVAL_PENDING, index=True)
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     review_note: Mapped[str | None] = mapped_column(String(255), nullable=True)

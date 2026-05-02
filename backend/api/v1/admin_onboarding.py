@@ -17,6 +17,7 @@ from models.store import Store
 from models.user import User
 from schemas.admin_onboarding import OnboardingDecisionRequest, OnboardingDecisionResponseData
 from schemas.user import AdminUserRead
+from services.plan_limit_service import get_plan_limits_by_tier, resolve_user_plan_limit
 
 router = APIRouter(prefix="/api/v1/admin/onboarding", tags=["admin-onboarding"])
 
@@ -33,6 +34,8 @@ def _user_with_layout_count_query():
             User.phone_number,
             User.role,
             User.subscription_tier,
+            User.annual_planogram_limit_override,
+            User.is_unlimited_override,
             User.approval_status,
             User.reviewed_at,
             User.review_note,
@@ -51,6 +54,7 @@ async def list_onboarding_requests(
     db: AsyncSession = Depends(get_db),
     _: object = Depends(require_role([ROLE_ADMIN])),
 ) -> dict:
+    plan_limits_by_tier = await get_plan_limits_by_tier(db)
     query = _user_with_layout_count_query().where(User.role != ROLE_ADMIN)
     if status_filter != "all":
         query = query.where(User.approval_status == status_filter)
@@ -62,6 +66,14 @@ async def list_onboarding_requests(
     for record in records:
         normalized = dict(record)
         normalized["layout_count"] = int(normalized["layout_count"] or 0)
+        normalized["plan_limit"] = resolve_user_plan_limit(
+            subscription_tier=normalized["subscription_tier"],
+            annual_override=normalized.get("annual_planogram_limit_override"),
+            is_unlimited_override=normalized.get("is_unlimited_override"),
+            plan_limits_by_tier=plan_limits_by_tier,
+        )
+        normalized.pop("annual_planogram_limit_override", None)
+        normalized.pop("is_unlimited_override", None)
         response_data.append(AdminUserRead.model_validate(normalized).model_dump(mode="json"))
 
     return success_response(response_data, "Onboarding requests fetched successfully.")

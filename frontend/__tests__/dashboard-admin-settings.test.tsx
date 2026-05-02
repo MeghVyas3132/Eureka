@@ -64,6 +64,11 @@ describe("Super admin page", () => {
                 review_note: null,
                 created_at: "2026-05-01T10:00:00Z",
                 layout_count: 3,
+                plan_limit: {
+                  annual_planogram_limit: 15,
+                  is_unlimited: false,
+                  source: "tier",
+                },
               },
             ],
             message: "ok",
@@ -90,6 +95,11 @@ describe("Super admin page", () => {
                 review_note: "approved",
                 created_at: "2026-05-01T10:00:00Z",
                 layout_count: 3,
+                plan_limit: {
+                  annual_planogram_limit: 15,
+                  is_unlimited: false,
+                  source: "tier",
+                },
               },
             ],
             message: "ok",
@@ -108,11 +118,29 @@ describe("Super admin page", () => {
       });
     });
 
-    (api.patch as jest.Mock).mockResolvedValue({
-      data: {
-        data: { tier: "individual-plus", annual_planogram_limit: 20, is_unlimited: false },
-        message: "saved",
-      },
+    (api.patch as jest.Mock).mockImplementation((url: string) => {
+      if (url.includes("/plan-limit")) {
+        return Promise.resolve({
+          data: {
+            data: {
+              user_id: "user-id",
+              plan_limit: {
+                annual_planogram_limit: 20,
+                is_unlimited: false,
+                source: "override",
+              },
+            },
+            message: "saved",
+          },
+        });
+      }
+
+      return Promise.resolve({
+        data: {
+          data: { status: "approved" },
+          message: "saved",
+        },
+      });
     });
   });
 
@@ -127,17 +155,20 @@ describe("Super admin page", () => {
     await waitFor(() => expect(api.patch).toHaveBeenCalledWith("/api/v1/admin/onboarding/requests/user-id", expect.any(Object)));
   });
 
-  it("renders limits tab and updates plan limits", async () => {
+  it("renders limits tab and updates per-user limits", async () => {
     render(<SuperAdminPage />);
 
     fireEvent.click(await screen.findByRole("button", { name: "Limits" }));
 
-    const input = await screen.findByLabelText("individual-plus-annual-limit");
+    fireEvent.click(await screen.findByRole("button", { name: "Edit limits for store_user" }));
+    fireEvent.click(await screen.findByLabelText("Use Individual Plus tier default"));
+
+    const input = await screen.findByLabelText("Annual planogram limit");
     fireEvent.change(input, { target: { value: "20" } });
-    fireEvent.click(screen.getAllByRole("button", { name: "Save" })[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Save limits" }));
 
     await waitFor(() =>
-      expect(api.patch).toHaveBeenCalledWith("/api/v1/admin/plan-limits/individual-plus", {
+      expect(api.patch).toHaveBeenCalledWith("/api/v1/admin/users/user-id/plan-limit", {
         annual_planogram_limit: 20,
         is_unlimited: false,
       }),
