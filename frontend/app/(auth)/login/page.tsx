@@ -81,7 +81,9 @@ export default function LoginPage() {
         error={error}
       >
         {approvalInfo ? (
-          <p className="rounded border border-yellow-300 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">{approvalInfo}</p>
+          <p className="rounded border border-yellow-300 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
+            {approvalInfo}
+          </p>
         ) : null}
 
         <div>

@@ -86,8 +86,8 @@ export default function RegisterPage() {
                   aria-pressed={isSelected}
                   className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
                     isSelected
-                      ? "border-emerald-700 bg-emerald-700 text-white"
-                      : "border-ink/20 bg-white text-ink hover:border-emerald-300"
+                      ? "border-emerald-700 bg-emerald-700 text-white shadow-sm"
+                      : "border-pink-200 bg-white text-ink hover:border-pink-300 hover:bg-pink-50"
                   }`}
                 >
                   {option.label}

@@ -77,9 +77,19 @@ const ROLE_LABELS: Record<SuperAdminUserRow["role"], string> = {
 
 const STATUS_STYLES: Record<SuperAdminUserRow["approval_status"], string> = {
   approved: "bg-green-100 text-green-700",
-  pending: "bg-yellow-100 text-yellow-800",
+  pending: "bg-yellow-100 text-yellow-900",
   rejected: "bg-red-100 text-red-700",
 };
+
+const FILTER_ACTIVE_STYLES: Record<RequestFilter, string> = {
+  pending: "border border-yellow-200 bg-yellow-100 text-yellow-900",
+  approved: "border border-green-200 bg-green-100 text-green-800",
+  rejected: "border border-red-200 bg-red-100 text-red-700",
+  all: "border border-pink-200 bg-pink-100 text-pink-700",
+};
+
+const FILTER_INACTIVE_STYLE =
+  "border border-slate-200 bg-white text-slate-600 hover:border-pink-300 hover:text-pink-600";
 
 function formatDate(value: string | null): string {
   if (!value) {
@@ -239,7 +249,11 @@ export default function SuperAdminPage() {
         </div>
       </section>
 
-      {rowsError ? <p className="mt-4 rounded-md bg-red-100 px-3 py-2 text-sm text-red-700">{rowsError}</p> : null}
+      {rowsError ? (
+        <p className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {rowsError}
+        </p>
+      ) : null}
 
       {activeTab === "onboarding" ? (
         <section className="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -259,10 +273,8 @@ export default function SuperAdminPage() {
                 key={filter.key}
                 type="button"
                 onClick={() => setRequestFilter(filter.key)}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wide ${
-                  requestFilter === filter.key
-                    ? "bg-slate-900 text-white"
-                    : "border border-slate-200 bg-slate-50 text-slate-600 hover:border-pink-300 hover:text-pink-700"
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition ${
+                  requestFilter === filter.key ? FILTER_ACTIVE_STYLES[filter.key] : FILTER_INACTIVE_STYLE
                 }`}
               >
                 {filter.label}
@@ -390,8 +402,16 @@ export default function SuperAdminPage() {
           <h2 className="text-2xl font-bold text-slate-900">Limits</h2>
           <p className="mt-1 text-sm text-slate-600">Configure per-plan annual layout limits.</p>
 
-          {planLimitsError ? <p className="mt-3 rounded bg-red-100 px-3 py-2 text-sm text-red-700">{planLimitsError}</p> : null}
-          {planLimitMessage ? <p className="mt-3 rounded bg-green-100 px-3 py-2 text-sm text-green-700">{planLimitMessage}</p> : null}
+          {planLimitsError ? (
+            <p className="mt-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {planLimitsError}
+            </p>
+          ) : null}
+          {planLimitMessage ? (
+            <p className="mt-3 rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+              {planLimitMessage}
+            </p>
+          ) : null}
 
           {loadingPlanLimits ? (
             <p className="mt-4 text-sm text-slate-600">Loading limits...</p>
@@ -434,7 +454,7 @@ export default function SuperAdminPage() {
                       type="button"
                       onClick={() => void savePlanLimit(record)}
                       disabled={savingTier === record.tier}
-                      className="rounded-lg bg-pink-600 px-4 py-2 text-sm font-semibold text-white hover:bg-pink-700 disabled:opacity-60"
+                      className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-60"
                     >
                       {savingTier === record.tier ? "Saving..." : "Save"}
                     </button>
