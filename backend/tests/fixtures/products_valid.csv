@@ -1,0 +1,6 @@
+sku,name,brand,category,width_cm,height_cm,depth_cm,price
+SKU-001,Organic Milk 1L,DairyBest,Dairy,7.5,23,7.5,2.99
+SKU-002,Wheat Bread 400g,BreadCo,Bakery,10,12,23,1.49
+SKU-003,Orange Juice 500ml,FreshSqueeze,Beverages,6,18,6,3.50
+SKU-004,Greek Yogurt 200g,DairyBest,Dairy,8,9,8,1.20
+SKU-005,Granola Bars Pack,SnackLab,Snacks,12,4,3,4.25

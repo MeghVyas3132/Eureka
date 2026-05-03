@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     aws_region: str = Field(default="ap-south-1", alias="AWS_REGION")
     s3_bucket_name: str = Field(default="eureka-uploads", alias="S3_BUCKET_NAME")
     use_local_storage: bool = Field(default=True, alias="USE_LOCAL_STORAGE")
+    local_upload_dir: str = Field(default="uploads", alias="LOCAL_UPLOAD_DIR")
 
     environment: str = Field(default="development", alias="ENVIRONMENT")
     cors_origins: str = Field(default="http://localhost:3000", alias="CORS_ORIGINS")

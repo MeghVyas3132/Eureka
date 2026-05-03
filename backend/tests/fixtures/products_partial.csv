@@ -1,0 +1,6 @@
+sku,name,brand,category,width_cm,height_cm,depth_cm,price
+SKU-101,Herbal Tea,LeafWorks,Beverages,8,10,3,2.50
+,Missing SKU,Brandless,Other,7,9,2,1.20
+SKU-103,Invalid Width,Brandless,Other,abc,9,2,1.20
+SKU-104,Valid Row,Brandless,Other,5,9,2,1.20
+SKU-105,Negative Price,Brandless,Other,5,9,2,-1.00

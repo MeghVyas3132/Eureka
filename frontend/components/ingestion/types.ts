@@ -1,0 +1,41 @@
+export type FileFormat = "csv" | "excel" | "pdf";
+export type ImportStatus = "completed" | "partial" | "failed";
+
+export interface ImportError {
+  row: number;
+  reason: string;
+}
+
+export interface ImportSummaryResponse {
+  import_id: string;
+  import_type: "product" | "sales";
+  file_format: FileFormat;
+  original_filename: string;
+  imported_at: string;
+  total_rows: number;
+  success: number;
+  skipped: number;
+  errors: ImportError[];
+  status: ImportStatus;
+  period_start?: string | null;
+  period_end?: string | null;
+  unmatched_skus?: string[] | null;
+}
+
+export interface ImportLogResponse {
+  id: string;
+  import_type: "product" | "sales";
+  file_format: FileFormat;
+  original_filename: string;
+  file_size_bytes: number;
+  total_rows: number;
+  success_count: number;
+  skipped_count: number;
+  error_count: number;
+  error_detail?: ImportError[] | null;
+  status: ImportStatus;
+  imported_at: string;
+  period_start?: string | null;
+  period_end?: string | null;
+  unmatched_skus?: string[] | null;
+}
