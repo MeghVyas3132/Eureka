@@ -9,6 +9,12 @@ class ImportError(BaseModel):
     reason: str
 
 
+class PotentialDuplicate(BaseModel):
+    sku: str
+    candidate_sku: str
+    similarity: float
+
+
 class ImportSummaryResponse(BaseModel):
     import_id: uuid.UUID
     import_type: str
@@ -24,6 +30,7 @@ class ImportSummaryResponse(BaseModel):
     period_start: str | None = None
     period_end: str | None = None
     unmatched_skus: list[str] | None = None
+    potential_duplicates: list[PotentialDuplicate] | None = None
 
 
 class ImportLogResponse(BaseModel):

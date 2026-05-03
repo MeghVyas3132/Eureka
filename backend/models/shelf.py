@@ -24,3 +24,8 @@ class Shelf(Base):
     num_rows: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
 
     zone: Mapped["Zone"] = relationship("Zone", back_populates="shelves")
+    placements: Mapped[list["Placement"]] = relationship(
+        "Placement",
+        back_populates="shelf",
+        cascade="all, delete-orphan",
+    )

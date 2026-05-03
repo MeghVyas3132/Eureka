@@ -91,7 +91,17 @@ async def test_products_import_rejects_large_file(authed_client):
 async def test_sales_import_success(authed_client, db_session):
     client, user = authed_client
 
-    store = Store(user_id=user.id, name="Store", width_m=10, height_m=10, store_type="supermarket")
+    store = Store(
+        user_id=user.id,
+        name="Store",
+        raw_name="Store",
+        display_name="Store",
+        country="India",
+        source="manual",
+        width_m=10,
+        height_m=10,
+        store_type="supermarket",
+    )
     db_session.add(store)
     db_session.add(Product(user_id=user.id, sku="SKU-001", name="Product 1"))
     db_session.add(Product(user_id=user.id, sku="SKU-002", name="Product 2"))
@@ -124,7 +134,17 @@ async def test_sales_import_store_not_found(authed_client):
 @pytest.mark.anyio
 async def test_sales_import_period_range_invalid(authed_client, db_session):
     client, user = authed_client
-    store = Store(user_id=user.id, name="Store", width_m=10, height_m=10, store_type="supermarket")
+    store = Store(
+        user_id=user.id,
+        name="Store",
+        raw_name="Store",
+        display_name="Store",
+        country="India",
+        source="manual",
+        width_m=10,
+        height_m=10,
+        store_type="supermarket",
+    )
     db_session.add(store)
     await db_session.commit()
 

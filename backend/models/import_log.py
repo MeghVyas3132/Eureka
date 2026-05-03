@@ -20,7 +20,7 @@ class ImportLog(Base):
         nullable=True,
         index=True,
     )
-    imported_by: Mapped[uuid.UUID] = mapped_column(
+    user_id: Mapped[uuid.UUID] = mapped_column(
         Uuid,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,

@@ -24,6 +24,7 @@ def parse_float(value: str | None, field_name: str) -> tuple[float | None, str |
             .replace("$", "")
             .replace("£", "")
             .replace("€", "")
+            .replace("₹", "")
             .strip()
         )
         return float(cleaned), None

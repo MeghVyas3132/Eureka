@@ -39,6 +39,10 @@ async def _create_store(db, user_id: uuid.UUID) -> Store:
     store = Store(
         user_id=user_id,
         name="Test Store",
+        raw_name="Test Store",
+        display_name="Test Store",
+        country="India",
+        source="manual",
         width_m=10,
         height_m=10,
         store_type="supermarket",
@@ -180,7 +184,7 @@ async def test_failed_import_writes_log(db_session, monkeypatch):
             db=db_session,
         )
 
-    result = await db_session.execute(select(ImportLog).where(ImportLog.imported_by == user.id))
+    result = await db_session.execute(select(ImportLog).where(ImportLog.user_id == user.id))
     log = result.scalar_one()
 
     assert log.status == "failed"

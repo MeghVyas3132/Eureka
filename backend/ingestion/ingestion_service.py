@@ -58,7 +58,7 @@ async def _log_failed_import(
 ) -> None:
     log = ImportLog(
         id=import_id,
-        imported_by=user_id,
+        user_id=user_id,
         store_id=store_id,
         import_type=import_type,
         file_format=file_format,
@@ -157,7 +157,7 @@ async def run_product_import(
     status = _resolve_status(success_count, len(result.error_rows))
     log = ImportLog(
         id=import_id,
-        imported_by=user_id,
+        user_id=user_id,
         store_id=None,
         import_type="product",
         file_format=file_format.value,
@@ -346,7 +346,7 @@ async def run_sales_import(
     status = _resolve_status(success_count, len(result.error_rows))
     log = ImportLog(
         id=import_id,
-        imported_by=user_id,
+        user_id=user_id,
         store_id=store_id,
         import_type="sales",
         file_format=file_format.value,

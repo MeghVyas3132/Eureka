@@ -41,3 +41,8 @@ class Product(Base):
     )
 
     user: Mapped["User"] = relationship("User")
+    placements: Mapped[list["Placement"]] = relationship(
+        "Placement",
+        back_populates="product",
+        cascade="all, delete-orphan",
+    )

@@ -19,6 +19,16 @@ class Store(Base):
         index=True,
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
+    raw_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    display_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    country: Mapped[str] = mapped_column(String(100), nullable=False, default="India")
+    state: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    city: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    locality: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    detected_chain: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    pin_code: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    parse_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+    source: Mapped[str] = mapped_column(String(50), nullable=False, default="manual")
     width_m: Mapped[float] = mapped_column(Float, nullable=False)
     height_m: Mapped[float] = mapped_column(Float, nullable=False)
     store_type: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -36,6 +46,11 @@ class Store(Base):
 
     layouts: Mapped[list["Layout"]] = relationship(
         "Layout",
+        back_populates="store",
+        cascade="all, delete-orphan",
+    )
+    planograms: Mapped[list["Planogram"]] = relationship(
+        "Planogram",
         back_populates="store",
         cascade="all, delete-orphan",
     )

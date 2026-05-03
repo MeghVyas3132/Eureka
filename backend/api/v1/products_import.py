@@ -53,7 +53,7 @@ async def get_product_import_history(
 ):
     result = await db.execute(
         select(ImportLog)
-        .where(ImportLog.imported_by == current_user.id, ImportLog.import_type == "product")
+        .where(ImportLog.user_id == current_user.id, ImportLog.import_type == "product")
         .order_by(desc(ImportLog.imported_at))
         .limit(limit)
     )
