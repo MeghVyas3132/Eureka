@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import axios from "axios";
 
 import { api } from "@/lib/api";
 import VersionHistoryPanel from "@/components/layout/VersionHistoryPanel";
@@ -17,17 +18,59 @@ export default function StoreLayoutPage() {
   const params = useParams();
   const storeId = params?.id as string;
 
-  const { layout, setLayout, isDirty, markDirty, markSaved } = useCanvasStore();
+  const { layout, setLayout, clearCanvas, isDirty, markDirty, markSaved } = useCanvasStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [errorDetail, setErrorDetail] = useState("");
+  const [errorAction, setErrorAction] = useState<"create-store" | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
 
+  const handleRequestError = (err: unknown, fallbackMessage: string) => {
+    setErrorDetail("");
+    setErrorAction(null);
+
+    if (!axios.isAxiosError(err)) {
+      setError(fallbackMessage);
+      return;
+    }
+
+    const status = err.response?.status;
+    const detail = err.response?.data?.detail;
+
+    if (status === 404) {
+      setError("Store not found for this account.");
+      setErrorAction("create-store");
+      return;
+    }
+
+    if (status === 422) {
+      setError("This store link is invalid. Create a store first.");
+      setErrorAction("create-store");
+      return;
+    }
+
+    if (status === 403 && typeof detail === "object" && detail?.error === "quota_exceeded") {
+      const message = detail?.detail?.message;
+      setError(message || "Annual planogram limit reached for this account.");
+      return;
+    }
+
+    const suffix = status ? ` (${status})` : "";
+    setError(`${fallbackMessage}${suffix}`);
+
+    if (detail) {
+      setErrorDetail(typeof detail === "string" ? detail : JSON.stringify(detail));
+    }
+  };
+
   const loadLayout = async () => {
     setLoading(true);
     setError("");
+    setErrorDetail("");
+    setErrorAction(null);
     try {
       const response = await api.get<LayoutListResponse>(`/api/v1/layouts?store_id=${storeId}`);
       if (response.data.data.length > 0) {
@@ -41,8 +84,8 @@ export default function StoreLayoutPage() {
         setLayout(created.data);
         setNameDraft(created.data.name);
       }
-    } catch {
-      setError("Unable to load layout.");
+    } catch (err) {
+      handleRequestError(err, "Unable to load layout.");
     } finally {
       setLoading(false);
     }
@@ -52,8 +95,16 @@ export default function StoreLayoutPage() {
     if (!storeId) {
       return;
     }
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(storeId);
+    if (!isUuid) {
+      clearCanvas();
+      setError("This store link is invalid. Create a store first.");
+      setErrorAction("create-store");
+      setLoading(false);
+      return;
+    }
     void loadLayout();
-  }, [storeId]);
+  }, [storeId, clearCanvas]);
 
   useEffect(() => {
     if (layout) {
@@ -80,8 +131,8 @@ export default function StoreLayoutPage() {
       setLayout(response.data);
       markSaved();
       setStatusMessage("Saved");
-    } catch {
-      setError("Unable to save layout.");
+    } catch (err) {
+      handleRequestError(err, "Unable to save layout.");
     }
   };
 
@@ -102,8 +153,8 @@ export default function StoreLayoutPage() {
       setLayout(response.data);
       markSaved();
       setStatusMessage("Saved");
-    } catch {
-      setError("Unable to save layout name.");
+    } catch (err) {
+      handleRequestError(err, "Unable to save layout name.");
     }
   };
 
@@ -176,7 +227,21 @@ export default function StoreLayoutPage() {
           </div>
         </header>
 
-        {error ? <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}
+        {error ? (
+          <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+            <p>{error}</p>
+            {errorDetail ? <p className="mt-1 text-xs text-red-600">{errorDetail}</p> : null}
+            {errorAction === "create-store" ? (
+              <button
+                type="button"
+                onClick={() => router.push("/store/new/layout")}
+                className="mt-3 rounded-full bg-pine px-3 py-1 text-xs font-semibold text-white"
+              >
+                Create store
+              </button>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
           <aside className="rounded-3xl border border-ink/10 bg-white/90 p-6 shadow">

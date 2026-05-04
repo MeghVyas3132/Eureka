@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { useAuthStore } from "@/store/authStore";
+import NewStoreModal from "@/components/stores/NewStoreModal";
 
 const PLAN_LABELS = {
   admin: "Admin",
@@ -15,6 +16,7 @@ const PLAN_LABELS = {
 export default function DashboardPage() {
   const router = useRouter();
   const { initializeAuth, user, logout } = useAuthStore();
+  const [isCreateStoreOpen, setIsCreateStoreOpen] = useState(false);
 
   useEffect(() => {
     initializeAuth();
@@ -40,7 +42,7 @@ export default function DashboardPage() {
         <div className="mt-4 flex gap-3">
           <button
             type="button"
-            onClick={() => router.push("/store/new/layout")}
+            onClick={() => setIsCreateStoreOpen(true)}
             className="rounded-lg bg-pine px-4 py-2 text-sm font-semibold text-white"
           >
             Create Layout
@@ -72,5 +74,10 @@ export default function DashboardPage() {
         </p>
       </section>
     </main>
+    <NewStoreModal
+      isOpen={isCreateStoreOpen}
+      onClose={() => setIsCreateStoreOpen(false)}
+      onCreated={(store) => router.push(`/store/${store.id}/layout`)}
+    />
   );
 }
