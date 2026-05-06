@@ -114,7 +114,7 @@ These features require live data connectors and are explicitly deferred:
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Next.js + Konva.js |
+| Frontend | React.js 18 (Vite) + Konva.js (2D) + Three.js (3D) |
 | Backend | FastAPI (Python, async) |
 | ORM | SQLAlchemy + Alembic |
 | Database | PostgreSQL |
@@ -151,7 +151,7 @@ These features require live data connectors and are explicitly deferred:
 | Phase | Features |
 |-------|----------|
 | **Phase 1 (MVP)** | Layout builder, product placement, CSV-driven analytics |
-| Phase 2 | Smart Shelf Builder (AI), collaboration, space utilisation, first auto-sync connectors |
+| Phase 2 | Smart Shelf Builder (AI), collaboration, space utilisation, first auto-sync connectors, Three.js 3D planogram view |
 | Phase 3 | Live POS/ERP connectors, dead zone detection, replenishment alerts, computer vision |
 | Phase 4 | Multi-store sync, advanced AI, IoT integrations, supplier portal |
 

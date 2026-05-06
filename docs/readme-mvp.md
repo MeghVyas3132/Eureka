@@ -82,8 +82,9 @@ Eureka MVP operates across **2 core layers**:
 ## 🏗️ Tech Stack
 
 ### Frontend
-- **Next.js** (React framework, SSR + routing)
-- **Konva.js** (Canvas engine for layout editor)
+- **React.js 18** (Vite, SPA, client-side routing via React Router v6)
+- **Konva.js** (2D canvas engine — layout editor and planogram editor)
+- **Three.js** (3D canvas engine — future 3D planogram view)
 
 ### Backend
 - **FastAPI** (Python, async REST API)
@@ -117,7 +118,7 @@ Eureka MVP operates across **2 core layers**:
 
 | Phase | Features |
 |-------|----------|
-| Phase 2 | Smart Shelf Builder (AI), Real-Time Dashboard, Multi-User Collaboration |
+| Phase 2 | Smart Shelf Builder (AI), Real-Time Dashboard, Multi-User Collaboration, Three.js 3D planogram view |
 | Phase 3 | Vision AI, Heatmaps, A/B Testing |
 | Phase 4 | Multi-Store Sync, Auto Replenishment, Advanced AI |
 
@@ -127,10 +128,11 @@ Eureka MVP operates across **2 core layers**:
 
 | Eureka MVP | Traditional Tools |
 |------------|------------------|
-| Canvas-based layout design | Spreadsheet/static tools |
+| Canvas-based layout design (Konva 2D + Three.js 3D ready) | Spreadsheet/static tools |
 | Size + category-aware placement | Manual estimation |
 | Built-in analytics layer | Separate BI tools |
 | API-first, scalable backend | Monolithic legacy apps |
+| Vite SPA — fast cold start, no server-side rendering needed | Server-dependent deployments |
 
 ---
 

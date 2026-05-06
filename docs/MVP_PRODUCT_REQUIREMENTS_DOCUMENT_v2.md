@@ -182,6 +182,7 @@ The following features are explicitly **excluded** from the MVP:
 | AI-assisted layout suggestions | Deferred post-MVP | Phase 2 |
 | Smart Shelf Builder (ML optimisation) | Deferred post-MVP | Phase 2 |
 | Multi-user collaboration | Deferred post-MVP | Phase 2 |
+| Three.js 3D planogram view | Deferred post-MVP | Phase 2 |
 | Computer vision / shelf recognition | Deferred | Phase 3 |
 | Heatmap visualisation | Requires sensor data | Phase 3 |
 | A/B Testing for layouts | Deferred | Phase 3 |
@@ -212,6 +213,8 @@ The following features are explicitly **excluded** from the MVP:
 - **Data Security:** All data encrypted in transit (TLS); passwords hashed (bcrypt)
 - **Data Isolation:** No external system can push or pull data from Eureka in MVP — all I/O is user-initiated
 - **Responsiveness:** Optimised for desktop browsers (Chrome, Firefox, Edge); tablet support is a stretch goal
+- **SPA behaviour:** No page reloads on navigation — React Router v6 handles all routing client-side
+- **Build output:** `vite build` produces a static `dist/` folder deployable to any static host (S3, CDN, Nginx)
 
 ---
 
@@ -231,6 +234,7 @@ The following features are explicitly **excluded** from the MVP:
 - Smart Shelf Builder (AI optimisation)
 - Real-Time Analytics Dashboard (first connector: POS CSV auto-sync / webhook)
 - Multi-User Collaboration (live editing, RBAC, comments)
+- Three.js 3D planogram view
 - Space Utilisation metrics
 - AI-assisted layout suggestions
 

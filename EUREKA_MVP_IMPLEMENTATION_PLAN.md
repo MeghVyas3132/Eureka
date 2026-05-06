@@ -1,7 +1,7 @@
 # 🛠️ EUREKA – MVP IMPLEMENTATION PLAN
 
 > Based on: `MVP_PRD_v2` + `MVP_TRD_v2` + `readme-mvp-v2`
-> Stack: **Next.js · FastAPI · SQLAlchemy · Alembic · PostgreSQL**
+> Stack: **React.js (Vite) · Konva.js · Three.js · FastAPI · SQLAlchemy · Alembic · PostgreSQL**
 > MVP Loop: `Design → Product Placement → CSV Import → Analytics`
 
 ---
@@ -18,21 +18,32 @@ The MVP is broken into **5 sequential sprints** of roughly 1–2 weeks each. Eac
 
 ```
 eureka/
-├── frontend/                          # Next.js 14 App Router
-│   ├── app/
-│   │   ├── (auth)/login/
-│   │   ├── dashboard/
-│   │   ├── store/[id]/layout/
-│   │   ├── store/[id]/analytics/
-│   │   ├── store/[id]/data/
-│   │   └── products/
-│   ├── components/
-│   │   ├── canvas/                    # Konva layout editor
-│   │   ├── analytics/                 # Charts + metric cards
-│   │   ├── products/                  # Product panel + CSV importer
-│   │   └── sales/                     # Sales entry + CSV importer
-│   ├── store/                         # Zustand state slices
-│   └── lib/                           # API client (Axios), utils
+├── frontend/                          # React.js 18 (Vite SPA)
+│   ├── index.html                     # Vite entry point
+│   ├── vite.config.ts
+│   ├── src/
+│   │   ├── main.tsx                   # React root, ReactDOM.createRoot
+│   │   ├── App.tsx                    # React Router v6 route definitions
+│   │   ├── pages/                    # src/pages/ route components
+│   │   │   ├── auth/
+│   │   │   │   ├── LoginPage.tsx
+│   │   │   │   └── RegisterPage.tsx
+│   │   │   ├── DashboardPage.tsx
+│   │   │   ├── store/
+│   │   │   │   ├── LayoutPage.tsx
+│   │   │   │   ├── AnalyticsPage.tsx
+│   │   │   │   └── DataPage.tsx
+│   │   │   └── ProductsPage.tsx
+│   │   ├── components/
+│   │   │   ├── canvas/                # Konva 2D layout editor
+│   │   │   ├── planogram/             # Konva planogram editor + Three.js 3D view
+│   │   │   ├── analytics/             # Charts + metric cards
+│   │   │   ├── products/              # Product panel + CSV importer
+│   │   │   └── sales/                 # Sales entry + CSV importer
+│   │   ├── router/
+│   │   │   └── ProtectedRoute.tsx     # Auth guard (replaces framework middleware)
+│   │   ├── store/                     # Zustand state slices
+│   │   └── lib/                       # Axios instance, utils
 │
 ├── backend/                           # FastAPI
 │   ├── main.py
@@ -95,17 +106,24 @@ eureka/
 - [ ] Unit tests: register, login, token refresh, invalid credentials
 
 #### Frontend Tasks
-- [ ] Init Next.js 14 project (App Router, TypeScript, Tailwind CSS)
-- [ ] Install: `zustand`, `axios`, `react-query`, `konva`, `react-konva`
-- [ ] Create `/app/(auth)/login/page.tsx` — login form
-- [ ] Create `/app/(auth)/register/page.tsx` — register form
+- [ ] Init React 18 + Vite project (TypeScript, Tailwind CSS)
+      `npm create vite@latest frontend -- --template react-ts`
+- [ ] Install: `react-router-dom`, `zustand`, `axios`, `@tanstack/react-query`,
+               `konva`, `react-konva`, `three`, `@react-three/fiber`,
+               `tailwindcss`, `react-dropzone`, `date-fns`
+- [ ] Configure Vite (`vite.config.ts`): proxy `/api` → backend on port 8000
+- [ ] Create `src/pages/auth/LoginPage.tsx` — login form
+- [ ] Create `src/pages/auth/RegisterPage.tsx` — register form
+- [ ] Create `src/App.tsx` — `<BrowserRouter>` with all `<Route>` definitions
+- [ ] Create `src/router/ProtectedRoute.tsx` — reads JWT from `authStore`,
+      redirects to `/` if unauthenticated
 - [ ] Zustand `authStore`: stores JWT token, user object, logout action
-- [ ] Axios instance in `lib/api.ts`: auto-attaches Bearer token, handles 401 → redirect
-- [ ] Protected route wrapper (middleware.ts) redirects unauthenticated users
+- [ ] Axios instance in `src/lib/api.ts`: auto-attaches Bearer token, handles 401 → redirect
+- [ ] Env var: `VITE_API_URL` in `.env` (replaces legacy public API URL prefix)
 
 #### Infrastructure
 - [ ] `docker-compose.yml`: services for `postgres`, `backend`, `frontend`
-- [ ] `.env.example` with all required vars: `DATABASE_URL`, `SECRET_KEY`, `S3_*`, etc.
+- [ ] `.env.example` with all required vars: `DATABASE_URL`, `SECRET_KEY`, `VITE_API_URL`, `S3_*`, etc.
 - [ ] `alembic upgrade head` runs in Docker entrypoint
 
 **Sprint 1 exit criteria:** User can register, log in, receive JWT, and access a protected `/dashboard` page.
@@ -161,7 +179,7 @@ eureka/
 - [ ] `/dashboard` page — store list, "New Store" button
 - [ ] `NewStoreModal` — form: name, width_m, height_m, store_type (select: supermarket/convenience/specialty)
 - [ ] `StoreCard` component — shows store name, type, last updated, "Open Layout" button
-- [ ] `/store/[id]/layout` page shell — renders top nav, sidebar, canvas area placeholder
+- [ ] `/store/:id/layout` page shell — renders top nav, sidebar, canvas area placeholder
 
 **Sprint 2 exit criteria:** User can create a store, create a layout, and the backend correctly versions every save.
 
@@ -175,6 +193,9 @@ eureka/
 
 **Canvas engine setup:**
 - [ ] `LayoutCanvas.tsx` — Konva `Stage` + `Layer`; dimensions match store width/height (scaled to viewport)
+- [ ] `ThreeDViewToggle.tsx` — button to switch between Konva 2D view and Three.js 3D view
+      (Three.js view is a placeholder in MVP — renders a basic 3D shelf frame only)
+      Full 3D planogram rendering is Phase 2.
 - [ ] Grid overlay — dotted grid lines at configurable unit (cm-based, scaled to px)
 - [ ] Snap-to-grid logic — all object positions rounded to nearest grid unit on drag end
 - [ ] Zoom + pan — mouse wheel zoom, middle-click pan
@@ -366,13 +387,13 @@ CREATE INDEX idx_zones_layout_id ON zones(layout_id);
 
 #### Frontend Tasks
 
-**Sales Data Page (`/store/[id]/data`):**
+**Sales Data Page (`/store/:id/data`):**
 - [ ] `SalesDataImporter.tsx` — CSV upload with period date range picker
 - [ ] `ManualSalesEntry.tsx` — form: SKU dropdown (from known products), units, revenue, period
 - [ ] Import history table — previous imports with timestamp, row counts, status
 - [ ] `DataFreshnessIndicator.tsx` — shows "Data as of [date]" badge on all analytics views
 
-**Analytics Dashboard (`/store/[id]/analytics`):**
+**Analytics Dashboard (`/store/:id/analytics`):**
 - [ ] `LayoutPerformanceScore.tsx` — large score card (0–100), colour-coded
 - [ ] `ZoneSalesChart.tsx` — bar chart of revenue per zone (Recharts or Chart.js)
 - [ ] `ShelfSalesHeatGrid.tsx` — visual grid of shelves colour-coded high/medium/low revenue
@@ -402,7 +423,7 @@ analyticsStore:
 | API integration | `httpx` + `pytest` | All 30+ endpoints; auth guards; tenant isolation |
 | CSV edge cases | pytest fixtures | Valid, malformed, empty, over 10 MB, missing required columns, duplicate SKUs |
 | DB migrations | Alembic + test DB | Each migration applies and rolls back cleanly |
-| Frontend components | Jest + RTL | Canvas interactions, product panel, importer, analytics cards |
+| Frontend components | Vitest + React Testing Library | Canvas interactions, product panel, importer, analytics cards |
 | E2E | Playwright | Full user flow: register → create store → layout → place products → import CSV → analytics |
 
 ---
@@ -416,7 +437,8 @@ analyticsStore:
 
 **Production (AWS):**
 - [ ] Backend: ECS Fargate (Docker image)
-- [ ] Frontend: Vercel or ECS
+- [ ] Frontend: AWS S3 + CloudFront (Vite builds to static dist/ — no server needed)
+      OR Nginx container on ECS serving the built dist/ folder
 - [ ] Database: AWS RDS PostgreSQL (Multi-AZ)
 - [ ] Storage: S3 bucket (product images + CSV archives) + CloudFront
 - [ ] Secrets: AWS Secrets Manager
@@ -427,7 +449,7 @@ analyticsStore:
 on: push to main
 steps:
   1. pytest (backend)
-  2. jest (frontend)
+  2. vitest (frontend)
   3. docker build
   4. alembic upgrade head (against staging RDS)
   5. deploy to ECS
@@ -458,9 +480,13 @@ pytest-asyncio
 
 **Frontend (`package.json`):**
 ```
-next
-react / react-dom
-konva / react-konva
+react
+react-dom
+react-router-dom          # client-side routing (replaces framework routing)
+konva
+react-konva               # 2D canvas — layout editor and planogram editor
+three                     # 3D canvas — future 3D planogram view
+@react-three/fiber        # React wrapper for Three.js
 zustand
 axios
 @tanstack/react-query
@@ -468,8 +494,11 @@ tailwindcss
 recharts                  # analytics charts
 react-dropzone            # CSV drag-and-drop upload
 date-fns                  # date formatting for data freshness
-jest / @testing-library/react
-playwright
+vite                      # build tool (dev + production)
+@vitejs/plugin-react      # Vite React plugin
+vitest                    # unit + component testing (Vite-native)
+@testing-library/react
+playwright                # E2E testing
 ```
 
 ---
@@ -539,7 +568,7 @@ ANALYTICS
 
 When MVP is shipped, the next additions slot in without touching existing architecture:
 
-- **Phase 2:** Redis for caching analytics, WebSocket service for collaboration, first AI shelf suggestion using existing placement + sales data
+- **Phase 2:** Redis for caching analytics, WebSocket service for collaboration, first AI shelf suggestion using existing placement + sales data, full Three.js 3D planogram rendering (replacing the MVP placeholder)
 - **Phase 3:** POS connector replaces CSV upload path; dead zone detection enabled by connected footfall data; Computer Vision service for shelf image matching
 - **Phase 4:** Multi-store sync, Kubernetes, MongoDB for layout graph scale
 

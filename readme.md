@@ -209,8 +209,11 @@ Eureka operates across 3 intelligence layers:
 # 🏗️ Architecture Overview
 
 ## Frontend
-- React
-- Canvas (Konva / Three.js)
+- React.js 18 (Vite, SPA)
+- Canvas 2D: Konva.js (layout editor, planogram editor)
+- Canvas 3D: Three.js (future 3D planogram view)
+- Routing: React Router v6
+- State: Zustand
 
 ## Backend
 - Node.js / Python microservices
@@ -261,12 +264,13 @@ Eureka operates across 3 intelligence layers:
 
 # 🧠 Key Differentiation
 
-| Eureka | Traditional Tools |
-|--------|-----------------|
-| AI-first | Manual workflows |
-| Closed-loop system | Static design |
-| Customer behavior driven | Assumption driven |
-| Real-time optimization | Post-analysis |
+| Eureka MVP | Traditional Tools |
+|------------|------------------|
+| Canvas-based layout design (Konva 2D + Three.js 3D ready) | Spreadsheet/static tools |
+| Size + category-aware placement | Manual estimation |
+| Built-in analytics layer | Separate BI tools |
+| API-first, scalable backend | Monolithic legacy apps |
+| Vite SPA — fast cold start, no server-side rendering needed | Server-dependent deployments |
 
 ---
 
@@ -301,4 +305,3 @@ Coming soon...
 # 📄 License
 
 TBD
-

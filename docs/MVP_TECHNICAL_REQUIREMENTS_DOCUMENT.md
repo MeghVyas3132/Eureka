@@ -18,7 +18,7 @@ Design (Canvas) → Save (API + DB) → Analyze (Analytics Service) → View (Da
 
 ### Core Layers (MVP):
 
-1. **Frontend Layer** — Next.js canvas application
+1. **Frontend Layer** — React.js 18 (Vite SPA) canvas application
 2. **API Layer** — FastAPI REST backend
 3. **Backend Services Layer** — Layout, Product, Analytics
 4. **Data Layer** — PostgreSQL via SQLAlchemy + Alembic
@@ -31,10 +31,12 @@ Design (Canvas) → Save (API + DB) → Analyze (Analytics Service) → View (Da
 ## 3. 🎨 Frontend Architecture
 
 ### Tech Stack
-- **Framework:** Next.js (React, SSR + client-side routing)
-- **Canvas Engine:** Konva.js (2D canvas for layout editor)
+- **Framework:** React.js 18 (Vite, SPA — client-side only, no SSR)
+- **Routing:** React Router v6 (`react-router-dom`)
+- **Canvas Engine (2D):** Konva.js (layout editor, planogram editor, shelf builder)
+- **Canvas Engine (3D):** Three.js (future 3D planogram view — installed now, used in Phase 2)
 - **State Management:** Zustand
-- **HTTP Client:** Axios / React Query
+- **HTTP Client:** Axios / TanStack React Query
 - **Styling:** Tailwind CSS
 
 ### Key Components
@@ -48,13 +50,17 @@ Design (Canvas) → Save (API + DB) → Analyze (Analytics Service) → View (Da
 | `TemplateSelector` | Store type template picker at layout creation |
 | `AuthModule` | Login, registration, JWT token management |
 
-### Routing (Next.js Pages / App Router)
+### Routing (React Router v6)
+
+Defined in `src/App.tsx` using `<BrowserRouter>` and `<Routes>`.
+Auth guard: `src/router/ProtectedRoute.tsx` wraps all authenticated routes.
 
 ```
 /                        → Landing / Login
 /dashboard               → Store list
-/store/[id]/layout       → Layout Canvas Editor
-/store/[id]/analytics    → Analytics Dashboard
+/store/:id/layout        → Layout Canvas Editor
+/store/:id/analytics     → Analytics Dashboard
+/store/:id/data          → Sales Data Management
 /products                → Product Master Data CRUD
 /settings                → User & account settings
 ```
@@ -237,7 +243,7 @@ sales_data
 ## 8. 🔄 MVP Data Flow
 
 ```
-1. User designs layout on canvas (Next.js / Konva.js)
+1. User designs layout on canvas (React.js + Vite / Konva.js 2D)
 2. Layout state sent to Layout Service (POST /api/v1/layouts)
 3. Layout persisted to PostgreSQL via SQLAlchemy
 4. Products fetched from Product Service and rendered on shelf canvas
@@ -312,7 +318,8 @@ sales_data
 ### Optimization Approaches
 - PostgreSQL indexes on `store_id`, `layout_id`, `sku`, `shelf_id`
 - SQLAlchemy lazy loading minimized; explicit joins used for analytics queries
-- Next.js ISR / SSR where appropriate for dashboard pages
+- Vite code splitting (`React.lazy` + `Suspense`) for dashboard pages
+- TanStack React Query caching to minimise re-fetches
 
 ---
 
@@ -323,7 +330,7 @@ sales_data
 | Unit tests (backend) | `pytest` | Core service logic |
 | API integration tests | `httpx` + `pytest` | All `/api/v1/` endpoints |
 | DB migration tests | Alembic + test DB | All migration scripts |
-| Frontend component tests | Jest + React Testing Library | Key canvas + form components |
+| Frontend component tests | Vitest + React Testing Library | Key canvas + form components |
 | End-to-end tests | Playwright | Core user flows (create layout, place product, view analytics) |
 
 ---
@@ -344,7 +351,7 @@ sales_data
 
 ```
 Push to main →
-  1. Run tests (pytest + jest)
+  1. Run tests (pytest + vitest)
   2. Build Docker images
   3. Run Alembic migrations (alembic upgrade head)
   4. Deploy to ECS / EC2
@@ -356,14 +363,32 @@ Push to main →
 
 ```
 eureka/
-├── frontend/                    # Next.js app
-│   ├── app/                     # App router pages
-│   ├── components/
-│   │   ├── canvas/              # Konva layout editor components
-│   │   ├── analytics/           # Dashboard charts and cards
-│   │   └── products/            # Product panel and CRUD
-│   ├── store/                   # Zustand state
-│   └── lib/                     # API client, utilities
+├── frontend/                          # React.js 18 (Vite SPA)
+│   ├── index.html                     # Vite entry point
+│   ├── vite.config.ts
+│   ├── src/
+│   │   ├── main.tsx                   # React root, ReactDOM.createRoot
+│   │   ├── App.tsx                    # React Router v6 route definitions
+│   │   ├── pages/                    # src/pages/ route components
+│   │   │   ├── auth/
+│   │   │   │   ├── LoginPage.tsx
+│   │   │   │   └── RegisterPage.tsx
+│   │   │   ├── DashboardPage.tsx
+│   │   │   ├── store/
+│   │   │   │   ├── LayoutPage.tsx
+│   │   │   │   ├── AnalyticsPage.tsx
+│   │   │   │   └── DataPage.tsx
+│   │   │   └── ProductsPage.tsx
+│   │   ├── components/
+│   │   │   ├── canvas/                # Konva 2D layout editor
+│   │   │   ├── planogram/             # Konva planogram editor + Three.js 3D view
+│   │   │   ├── analytics/             # Charts + metric cards
+│   │   │   ├── products/              # Product panel + CSV importer
+│   │   │   └── sales/                 # Sales entry + CSV importer
+│   │   ├── router/
+│   │   │   └── ProtectedRoute.tsx     # Auth guard
+│   │   ├── store/                     # Zustand state slices
+│   │   └── lib/                       # Axios instance, utils
 │
 ├── backend/                     # FastAPI app
 │   ├── main.py
@@ -395,7 +420,7 @@ eureka/
 
 | Phase | Addition |
 |-------|---------|
-| Phase 2 | Redis (real-time collab + caching), WebSocket service, AI Optimization Service |
+| Phase 2 | Redis (real-time collab + caching), WebSocket service, AI Optimization Service, Three.js 3D planogram view |
 | Phase 3 | Computer Vision Service (YOLO/Detectron2), Heatmap Engine |
 | Phase 4 | Multi-Store Sync Service, MongoDB (flexible layout graphs at scale), Kubernetes |
 
@@ -406,11 +431,11 @@ eureka/
 Eureka MVP is deliberately **simple in scope, but production-quality in foundation**. The FastAPI + SQLAlchemy + Alembic + PostgreSQL stack gives the project clean async performance, strict schema control, and zero-friction migration management — ensuring that every Phase 2–4 feature can be bolted on without architectural rework.
 
 ```
-Design (Konva Canvas) → API (FastAPI) → ORM (SQLAlchemy) → DB (PostgreSQL)
+Design (Konva 2D / Three.js 3D) → API (FastAPI) → ORM (SQLAlchemy) → DB (PostgreSQL)
                                   ↓
                          Analytics Service
                                   ↓
-                         Dashboard (Next.js)
+                         Dashboard (React.js + Vite SPA)
 ```
 
 ---

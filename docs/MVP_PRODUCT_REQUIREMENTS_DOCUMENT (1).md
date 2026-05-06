@@ -136,6 +136,7 @@ The following features are explicitly **excluded** from the MVP and planned for 
 | Smart Shelf Builder (ML optimization) | Phase 2 |
 | Real-time analytics dashboard | Phase 2 |
 | Multi-user collaboration | Phase 2 |
+| Three.js 3D planogram view | Phase 2 |
 | Computer vision / image-based shelf recognition | Phase 3 |
 | Heatmap visualization (footfall + shelf interaction) | Phase 3 |
 | A/B Testing for layouts | Phase 3 |
@@ -166,6 +167,8 @@ The following features are explicitly **excluded** from the MVP and planned for 
 - **Performance:** Canvas renders layouts with up to 500 product items without lag
 - **Data Security:** All data encrypted in transit (TLS); passwords hashed (bcrypt)
 - **Responsiveness:** Optimized for desktop browsers (Chrome, Firefox, Edge); tablet support is a stretch goal
+- **SPA behavior:** No page reloads on navigation — React Router v6 handles all routing client-side
+- **Build output:** `vite build` produces a static `dist/` folder deployable to any static host (S3, CDN, Nginx)
 
 ---
 
@@ -180,6 +183,7 @@ The following features are explicitly **excluded** from the MVP and planned for 
 - Smart Shelf Builder (AI optimization)
 - Real-Time Analytics Dashboard
 - Multi-User Collaboration (live editing, RBAC, comments)
+- Three.js 3D planogram view
 - Dead Zone Detection
 - Space Utilization metrics
 

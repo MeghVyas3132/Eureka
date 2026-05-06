@@ -20,7 +20,7 @@ Design (Canvas) → Save (API + DB) → Import Data (CSV / Manual) → Analyze �
 
 ### Core Layers (MVP):
 
-1. **Frontend Layer** — Next.js canvas application
+1. **Frontend Layer** — React.js 18 (Vite SPA) canvas application
 2. **API Layer** — FastAPI REST backend
 3. **Backend Services Layer** — Layout, Product, Analytics, File Ingestion
 4. **Data Layer** — PostgreSQL via SQLAlchemy + Alembic
@@ -42,10 +42,12 @@ These are deferred to Phase 2–4 and will be added as discrete microservices wi
 ## 3. 🎨 Frontend Architecture
 
 ### Tech Stack
-- **Framework:** Next.js (React, SSR + client-side routing)
-- **Canvas Engine:** Konva.js (2D canvas for layout editor)
+- **Framework:** React.js 18 (Vite, SPA — client-side only, no SSR)
+- **Routing:** React Router v6 (`react-router-dom`)
+- **Canvas Engine (2D):** Konva.js (layout editor, planogram editor, shelf builder)
+- **Canvas Engine (3D):** Three.js (future 3D planogram view — installed now, used in Phase 2)
 - **State Management:** Zustand
-- **HTTP Client:** Axios / React Query
+- **HTTP Client:** Axios / TanStack React Query
 - **Styling:** Tailwind CSS
 
 ### Key Components
@@ -63,14 +65,16 @@ These are deferred to Phase 2–4 and will be added as discrete microservices wi
 | `TemplateSelector` | Store type template picker at layout creation |
 | `AuthModule` | Login, registration, JWT token management |
 
-### Routing (Next.js App Router)
+### Routing (React Router v6)
+
+Defined in `src/App.tsx` using `<BrowserRouter>` and `<Routes>`.
 
 ```
 /                          → Landing / Login
 /dashboard                 → Store list
-/store/[id]/layout         → Layout Canvas Editor
-/store/[id]/analytics      → Analytics Dashboard
-/store/[id]/data           → Sales Data Management (import / manual entry)
+/store/:id/layout          → Layout Canvas Editor
+/store/:id/analytics       → Analytics Dashboard
+/store/:id/data            → Sales Data Management (import / manual entry)
 /products                  → Product Master Data CRUD + CSV import
 /settings                  → User & account settings
 ```
@@ -355,7 +359,7 @@ csv_import_log
 ## 9. 🔄 MVP Data Flow
 
 ```
-1. User designs layout on canvas (Next.js / Konva.js)
+1. User designs layout on canvas (React.js + Vite / Konva.js 2D)
 2. Layout state sent to Layout Service (POST /api/v1/layouts)
 3. Layout persisted to PostgreSQL via SQLAlchemy
 4. Products fetched from Product Service and rendered on shelf canvas
@@ -458,7 +462,8 @@ csv_import_log
 - PostgreSQL indexes on `store_id`, `layout_id`, `sku`, `shelf_id`
 - Sales data queries use pre-aggregation on upload (aggregate metrics cached per store/period)
 - SQLAlchemy bulk upserts for CSV import (not row-by-row)
-- Next.js ISR / SSR for dashboard pages
+- Vite code splitting via `React.lazy` + route-level `Suspense` boundaries
+- TanStack React Query `staleTime` config to prevent redundant API calls
 
 ---
 
@@ -470,7 +475,7 @@ csv_import_log
 | API integration tests | `httpx` + `pytest` | All `/api/v1/` endpoints including import routes |
 | CSV import tests | pytest fixtures | Valid CSVs, malformed CSVs, empty files, oversized files, duplicate SKUs |
 | DB migration tests | Alembic + test DB | All migration scripts |
-| Frontend component tests | Jest + RTL | Canvas, product panel, importer, analytics cards |
+| Frontend component tests | Vitest + React Testing Library | Canvas, product panel, importer, analytics cards |
 | End-to-end tests | Playwright | Create layout → place products → import CSV → view analytics |
 
 ---
@@ -493,15 +498,32 @@ csv_import_log
 
 ```
 eureka/
-├── frontend/
-│   ├── app/
-│   ├── components/
-│   │   ├── canvas/              # Konva layout editor
-│   │   ├── analytics/           # Dashboard charts and cards
-│   │   ├── products/            # Product panel, CRUD, CSV importer
-│   │   └── sales/               # Sales data entry + CSV importer
-│   ├── store/                   # Zustand state
-│   └── lib/                     # API client, utilities
+├── frontend/                          # React.js 18 (Vite SPA)
+│   ├── index.html                     # Vite entry point
+│   ├── vite.config.ts
+│   ├── src/
+│   │   ├── main.tsx                   # React root, ReactDOM.createRoot
+│   │   ├── App.tsx                    # React Router v6 route definitions
+│   │   ├── pages/                    # src/pages/ route components
+│   │   │   ├── auth/
+│   │   │   │   ├── LoginPage.tsx
+│   │   │   │   └── RegisterPage.tsx
+│   │   │   ├── DashboardPage.tsx
+│   │   │   ├── store/
+│   │   │   │   ├── LayoutPage.tsx
+│   │   │   │   ├── AnalyticsPage.tsx
+│   │   │   │   └── DataPage.tsx
+│   │   │   └── ProductsPage.tsx
+│   │   ├── components/
+│   │   │   ├── canvas/                # Konva 2D layout editor
+│   │   │   ├── planogram/             # Konva planogram editor + Three.js 3D view
+│   │   │   ├── analytics/             # Charts + metric cards
+│   │   │   ├── products/              # Product panel + CSV importer
+│   │   │   └── sales/                 # Sales entry + CSV importer
+│   │   ├── router/
+│   │   │   └── ProtectedRoute.tsx     # Auth guard
+│   │   ├── store/                     # Zustand state slices
+│   │   └── lib/                       # Axios instance, utils
 │
 ├── backend/
 │   ├── main.py
@@ -541,7 +563,7 @@ eureka/
 
 | Phase | Addition | Connector dependency |
 |-------|---------|---------------------|
-| Phase 2 | Redis (caching), WebSocket (collaboration), AI Optimisation Service | None — internal only |
+| Phase 2 | Redis (caching), WebSocket (collaboration), AI Optimisation Service, Three.js 3D planogram view | None — internal only |
 | Phase 3 | POS connector service, ERP/WMS webhooks, live analytics pipeline | First external integrations |
 | Phase 3 | Computer Vision Service (YOLO/Detectron2) | Image upload only |
 | Phase 3 | Dead zone detection, replenishment alerts | Requires Phase 3 connectors |
@@ -554,13 +576,13 @@ eureka/
 Eureka MVP is **deliberately connector-free.** This is not a technical limitation — it is a product decision that eliminates the single biggest source of delay and complexity in enterprise retail software (integration projects). By designing a clean CSV ingestion layer now, the backend is primed to swap manual file uploads for automatic data pushes in Phase 3 with minimal rework.
 
 ```
-Design (Konva) → API (FastAPI) → ORM (SQLAlchemy) → DB (PostgreSQL)
+Design (Konva 2D / Three.js 3D) → API (FastAPI) → ORM (SQLAlchemy) → DB (PostgreSQL)
                                         ↓
                              CSV Ingestion Service
                                         ↓
                              Analytics Service
                                         ↓
-                             Dashboard (Next.js)
+                             Dashboard (React.js + Vite SPA)
                              [Last updated: timestamp]
 ```
 

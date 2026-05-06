@@ -249,6 +249,7 @@ Eureka is an AI-powered retail store intelligence platform that enables users to
 - Smart shelf builder
 - Dashboard
 - Collaboration
+- Three.js 3D planogram view
 
 ### Phase 3
 - Vision AI
