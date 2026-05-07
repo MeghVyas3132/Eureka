@@ -1,8 +1,10 @@
 # 🛠️ EUREKA – MVP IMPLEMENTATION PLAN
 
 > Based on: `MVP_PRD_v2` + `MVP_TRD_v2` + `readme-mvp-v2`
-> Stack: **React.js (Vite) · Konva.js · Three.js · FastAPI · SQLAlchemy · Alembic · PostgreSQL**
-> MVP Loop: `Design → Product Placement → CSV Import → Analytics`
+> Stack: **Next.js · FastAPI · SQLAlchemy · Alembic · PostgreSQL**
+> MVP Loop (original): `Design → Product Placement → CSV Import → Analytics`
+
+> ⚠️ **Status note (updated 2026-05-08):** This is the **original sprint plan** for the canvas-first MVP. The product later pivoted to the **planogram platform** specified in [`prompt.md`](../prompt.md) (Upload → Structure → Generate → Edit → Export). For what's currently built and deployed, read [`docs/STATUS.md`](STATUS.md) and the root [`readme.md`](../readme.md). The duplicate at the repo root (`/EUREKA_MVP_IMPLEMENTATION_PLAN.md`) carries the canonical shipped-vs-planned delta table.
 
 ---
 
