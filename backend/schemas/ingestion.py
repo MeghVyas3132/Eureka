@@ -10,9 +10,14 @@ class ImportError(BaseModel):
 
 
 class PotentialDuplicate(BaseModel):
-    sku: str
-    candidate_sku: str
+    row_a: int | None = None
+    sku_a: str
+    name_a: str
+    row_b: int
+    sku_b: str
+    name_b: str
     similarity: float
+    source: str
 
 
 class ImportSummaryResponse(BaseModel):
