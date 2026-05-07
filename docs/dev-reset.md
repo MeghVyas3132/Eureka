@@ -2,6 +2,8 @@
 
 Use one of the options below to clear all data and start fresh. After reset, the default admin user will be re-seeded automatically on the first login or registration request.
 
+> Note: Resetting wipes everything — users, stores, products, sales, planograms (including version history), import logs, and the per-user planogram quota counter. The seeded admin (below) and tier-default plan limits will be re-created automatically; per-user `annual_planogram_limit_override` values are lost.
+
 ## Option A: Docker Compose (recommended)
 
 ```bash
