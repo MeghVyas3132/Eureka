@@ -30,7 +30,7 @@ class UserPlanLimitRead(BaseModel):
 
 
 class AdminUserRead(UserRead):
-    layout_count: int = Field(ge=0)
+    planogram_count: int = Field(ge=0)
     reviewed_at: datetime | None = None
     review_note: str | None = None
     plan_limit: UserPlanLimitRead
