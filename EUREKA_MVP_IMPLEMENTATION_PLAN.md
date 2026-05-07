@@ -1,8 +1,45 @@
 # 🛠️ EUREKA – MVP IMPLEMENTATION PLAN
 
 > Based on: `MVP_PRD_v2` + `MVP_TRD_v2` + `readme-mvp-v2`
-> Stack: **React.js (Vite) · Konva.js · Three.js · FastAPI · SQLAlchemy · Alembic · PostgreSQL**
-> MVP Loop: `Design → Product Placement → CSV Import → Analytics`
+> Stack: **Next.js · FastAPI · SQLAlchemy · Alembic · PostgreSQL**
+> MVP Loop (original): `Design → Product Placement → CSV Import → Analytics`
+
+> ⚠️ **Status note (updated 2026-05-08):** This is the **original sprint plan** for the canvas-first MVP. The product later pivoted to the **planogram platform** specified in [`prompt.md`](prompt.md) (Upload → Structure → Generate → Edit → Export). The shipped product matches that pivot. For what's currently built and deployed, read [`docs/STATUS.md`](docs/STATUS.md) and the root [`readme.md`](readme.md).
+
+---
+
+## 🚢 SHIPPED STATUS SNAPSHOT (2026-05-08)
+
+The **canvas-first MVP loop** in this plan was superseded by the planogram platform. The table below maps original sprints to current shipped scope.
+
+| Original sprint | Original goal | Current status |
+|---|---|---|
+| Sprint 1 — Foundation & Auth | JWT auth, register/login/refresh, protected dashboard | ✅ **Shipped** — also adds role-based access, admin approval workflow, super-admin |
+| Sprint 2 — Store / Layout / Zone / Shelf | Store CRUD + zone/shelf canvas data model | ✅ **Shipped** for Stores; Layout/Zone/Shelf models exist but the UI is no longer the primary flow (replaced by planogram engine) |
+| Sprint 3 — Canvas Layout Editor (Konva) | Drag/drop store-floorplan editor | ⚠️ **Pivoted** — Konva editor now powers the **planogram editor** (`/stores/{id}/planogram/{pid}`), not store-floor-plan editing |
+| Sprint 4 — Products + Placement | CSV import, drag products to shelves, facings | ✅ **Shipped** — products + sales + stores all import via CSV/Excel/PDF (Layer 2). Drag/facings/placement live on the planogram canvas |
+| Sprint 5 — Sales + Analytics Dashboard | Sales CSV + 5 analytics metrics | ⚠️ **Re-scoped** — sales CSV ingest shipped; "5 analytics metrics" replaced by the **confidence score + data-quality warnings** surfaced on the planogram editor and the per-store **DataHealthWidget** on the dashboard |
+
+### Net delta from original plan
+
+**Added beyond plan:**
+- Layer 3.5 Assortment Filter (`backend/services/assortment_filter.py`)
+- Layer 4 Store Intelligence Engine (`backend/services/store_intelligence.py`)
+- Layer 5 Planogram Engine with store-type rules + confidence scoring (`backend/services/planogram_engine.py`)
+- Layer 7 Export Engine — JPEG (Pillow) + PPTX (python-pptx) (`backend/services/export_service.py`)
+- Hierarchical store dashboard (Country → State → City → Locality)
+- Per-store landing page with "Generate AI Planogram" CTA
+- Auto-redirect on login: new users → `/upload`, returning → `/dashboard`, admins → `/super-admin`
+- Per-user planogram quota enforcement at generate time
+- Admin global stats endpoint (`GET /api/v1/admin/stats`) + super-admin metric cards & per-user usage column
+- SKU fuzzy deduplicator (`rapidfuzz`)
+
+**Out-of-scope vs original plan:**
+- Standalone analytics dashboard with the 5 metrics (heatmap, sales-by-zone, etc.) — replaced by confidence + data-quality UX
+- Store floor-plan canvas editor — superseded by the planogram editor
+- Standalone shelf editor side panel
+
+The full file-by-file shipped log lives in [`docs/STATUS.md`](docs/STATUS.md).
 
 ---
 
