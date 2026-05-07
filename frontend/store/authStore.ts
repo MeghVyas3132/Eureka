@@ -83,6 +83,28 @@ export function getPostLoginRoute(user: Pick<User, "role">): "/super-admin" | "/
   return user.role === "admin" ? "/super-admin" : "/dashboard";
 }
 
+/**
+ * Async post-login routing — admins go to /super-admin, end-users with at least
+ * one store go to /dashboard, and brand-new users with no stores yet land on
+ * /upload to ingest data first.
+ */
+export async function resolvePostLoginRoute(
+  user: Pick<User, "role">,
+): Promise<"/super-admin" | "/dashboard" | "/upload"> {
+  if (user.role === "admin") {
+    return "/super-admin";
+  }
+  try {
+    const response = await api.get<{ total: number }>("/api/v1/stores");
+    if ((response.data?.total ?? 0) === 0) {
+      return "/upload";
+    }
+    return "/dashboard";
+  } catch (err) {
+    return "/dashboard";
+  }
+}
+
 function persistSession(payload: AuthPayload): void {
   window.localStorage.setItem(ACCESS_TOKEN_KEY, payload.tokens.access_token);
   window.localStorage.setItem(REFRESH_TOKEN_KEY, payload.tokens.refresh_token);
