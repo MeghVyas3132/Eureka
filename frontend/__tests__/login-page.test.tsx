@@ -14,14 +14,15 @@ const initializeAuthMock = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => routerMock,
-  useSearchParams: () =>
-    ({
-      get: () => null,
-    }) as URLSearchParams,
+  useSearchParams: () => ({
+    get: () => null,
+  }),
 }));
 
 jest.mock("@/store/authStore", () => ({
   getPostLoginRoute: (user: { role: string }) => (user.role === "admin" ? "/super-admin" : "/dashboard"),
+  resolvePostLoginRoute: async (user: { role: string }) =>
+    user.role === "admin" ? "/super-admin" : "/dashboard",
   useAuthStore: () => ({
     login: loginMock,
     token: null,
