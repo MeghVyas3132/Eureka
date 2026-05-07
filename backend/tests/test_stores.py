@@ -124,6 +124,48 @@ async def test_list_stores_empty_for_new_user(client, auth_headers):
 
 
 @pytest.mark.anyio
+async def test_get_store_hierarchy(client, auth_headers):
+    await _create_store(
+        client,
+        auth_headers,
+        {"name": "RF Indiranagar BLR 560038", "width_m": 10, "height_m": 10, "store_type": "supermarket"},
+    )
+    await _create_store(
+        client,
+        auth_headers,
+        {"name": "RS Koramangala BLR 560034", "width_m": 10, "height_m": 10, "store_type": "supermarket"},
+    )
+
+    response = await client.get("/api/v1/stores/hierarchy", headers=auth_headers)
+
+    assert response.status_code == 200
+    hierarchy = response.json()
+    assert "India" in hierarchy
+    assert "Karnataka" in hierarchy["India"]
+    assert "Bangalore" in hierarchy["India"]["Karnataka"]
+
+
+@pytest.mark.anyio
+async def test_import_stores_from_csv(client, auth_headers):
+    csv_payload = (
+        "store_name,city,state,store_type\\n"
+        "RF Indiranagar BLR 560038,Bangalore,Karnataka,supermarket\\n"
+    )
+    files = {"file": ("stores.csv", csv_payload, "text/csv")}
+
+    response = await client.post("/api/v1/stores/import", headers=auth_headers, files=files)
+
+    assert response.status_code == 200
+    summary = response.json()
+    assert summary["import_type"] == "store"
+    assert summary["success"] == 1
+
+    stores_response = await client.get("/api/v1/stores", headers=auth_headers)
+    assert stores_response.status_code == 200
+    assert stores_response.json()["total"] == 1
+
+
+@pytest.mark.anyio
 async def test_get_store_for_owner(client, auth_headers):
     store = await _create_store(client, auth_headers)
 
