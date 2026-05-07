@@ -18,6 +18,7 @@ const STATUS_STYLES: Record<ImportSummaryResponse["status"], string> = {
 
 export default function ImportSummaryCard({ summary, onDismiss, onViewErrors }: ImportSummaryCardProps) {
   const [showErrors, setShowErrors] = useState(false);
+  const [showDuplicates, setShowDuplicates] = useState(false);
 
   const statusLabel = useMemo(() => {
     if (summary.status === "completed") {
@@ -83,7 +84,56 @@ export default function ImportSummaryCard({ summary, onDismiss, onViewErrors }: 
       {summary.unmatched_skus && summary.unmatched_skus.length > 0 ? (
         <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           {summary.unmatched_skus.length} SKUs did not match your product catalog. Sales data was imported but
-          will not appear in layout analytics until products are added.
+          will not appear in planogram analytics until products are added.
+        </div>
+      ) : null}
+
+      {summary.potential_duplicates && summary.potential_duplicates.length > 0 ? (
+        <div className="mt-4 rounded-xl border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-900">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="font-semibold">
+              Possible Duplicate Products Detected ({summary.potential_duplicates.length})
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowDuplicates((prev) => !prev)}
+              className="text-xs font-semibold text-yellow-900 underline decoration-yellow-700 underline-offset-2"
+            >
+              {showDuplicates ? "Hide details" : "Review details"}
+            </button>
+          </div>
+          <p className="mt-1 text-xs text-yellow-800">
+            These SKUs may refer to the same product. Review manually before downstream planning.
+          </p>
+          {showDuplicates ? (
+            <div className="mt-3 max-h-64 overflow-auto rounded-xl border border-yellow-200 bg-white">
+              <table className="w-full text-left text-sm">
+                <thead className="sticky top-0 bg-yellow-100 text-xs uppercase tracking-widest text-yellow-800">
+                  <tr>
+                    <th className="px-3 py-2">Existing</th>
+                    <th className="px-3 py-2">Imported</th>
+                    <th className="px-3 py-2">Match %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {summary.potential_duplicates.map((duplicate) => (
+                    <tr
+                      key={`${duplicate.sku_a}-${duplicate.sku_b}-${duplicate.row_b}`}
+                      className="border-t border-yellow-100"
+                    >
+                      <td className="px-3 py-2 text-ink/80">
+                        {duplicate.name_a} ({duplicate.sku_a})
+                      </td>
+                      <td className="px-3 py-2 text-ink/80">
+                        {duplicate.name_b} ({duplicate.sku_b})
+                      </td>
+                      <td className="px-3 py-2 text-ink/80">{Math.round(duplicate.similarity)}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
