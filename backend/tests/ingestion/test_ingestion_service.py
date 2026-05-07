@@ -189,3 +189,35 @@ async def test_failed_import_writes_log(db_session, monkeypatch):
 
     assert log.status == "failed"
     assert log.error_count == 1
+
+
+@pytest.mark.anyio
+async def test_product_import_returns_potential_duplicates(db_session, monkeypatch):
+    async def _fake_archive(*_args, **_kwargs):
+        return "test-key"
+
+    monkeypatch.setattr("ingestion.ingestion_service.archive_file", _fake_archive)
+    user = await _create_user(db_session, email="dupes@example.com")
+
+    existing = Product(user_id=user.id, sku="COKE-X", name="Coca Cola 500 ml")
+    db_session.add(existing)
+    await db_session.commit()
+
+    csv_bytes = (
+        "sku,name\\n"
+        "COKE-001,Coke 500 ML\\n"
+        "COKE-002,Coca Cola 500ml\\n"
+    ).encode("utf-8")
+
+    summary = await run_product_import(
+        file_bytes=csv_bytes,
+        file_format=FileFormat.CSV,
+        original_filename="dupes.csv",
+        file_size_bytes=len(csv_bytes),
+        user_id=user.id,
+        db=db_session,
+    )
+
+    assert summary.success == 2
+    assert summary.potential_duplicates is not None
+    assert len(summary.potential_duplicates) >= 1
