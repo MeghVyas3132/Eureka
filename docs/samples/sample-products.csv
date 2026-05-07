@@ -1,0 +1,21 @@
+sku,name,brand,category,width_cm,height_cm,depth_cm,price
+SKU-001,Coca Cola 500ml,Coca-Cola,Beverages,7.5,23,7.5,40
+SKU-002,Pepsi 500ml,Pepsi,Beverages,7.5,23,7.5,40
+SKU-003,Organic Milk 1L,DairyBest,Dairy,8,20,8,80
+SKU-004,Greek Yogurt 200g,DairyBest,Dairy,7,10,7,55
+SKU-005,Lays Classic 90g,Lays,Snacks,15,18,4,30
+SKU-006,Kurkure Masala Munch 80g,Kurkure,Snacks,15,18,4,25
+SKU-007,Britannia Marie Gold 250g,Britannia,Bakery,6,15,5,35
+SKU-008,Parle G Biscuits 100g,Parle,Bakery,6,12,5,15
+SKU-009,Tropicana Orange Juice 1L,Tropicana,Beverages,8,22,8,140
+SKU-010,Amul Butter 500g,Amul,Dairy,9,12,9,275
+SKU-011,Maggie Noodles 70g,Maggie,Snacks,12,9,4,14
+SKU-012,Surf Excel 1kg,Surf,Household,12,25,12,210
+SKU-013,Vim Dishwash Bar 200g,Vim,Household,8,12,4,30
+SKU-014,Dove Soap 100g,Dove,Personal Care,7,10,4,75
+SKU-015,Colgate Toothpaste 200g,Colgate,Personal Care,5,18,4,140
+SKU-016,Head and Shoulders Shampoo 340ml,Head & Shoulders,Personal Care,7,18,7,220
+SKU-017,Fortune Sunflower Oil 1L,Fortune,Household,9,25,9,180
+SKU-018,Aashirvaad Atta 5kg,Aashirvaad,Household,25,35,12,260
+SKU-019,Tata Salt 1kg,Tata,Household,12,18,5,30
+SKU-020,Red Label Tea 500g,Red Label,Beverages,12,18,5,255
