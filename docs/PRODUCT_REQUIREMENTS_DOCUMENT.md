@@ -1,5 +1,7 @@
 # 📘 EUREKA – PRODUCT REQUIREMENTS DOCUMENT (PRD)
 
+> ⚠️ **Status note (updated 2026-05-08):** This PRD describes Eureka's broader long-term vision (full closed-loop retail intelligence). The currently shipped product is the **planogram MVP** specified in [`prompt.md`](../prompt.md). For what's actually built and deployed, see [`docs/STATUS.md`](STATUS.md) and the root [`readme.md`](../readme.md). Treat this document as forward-looking direction, not the current build.
+
 ## 1. 🧠 Product Overview
 Eureka is an AI-powered retail store intelligence platform that enables users to design, simulate, optimize, and operate entire retail environments—from store-level zoning to shelf-level product placement—using real-world data, computer vision, and intelligent automation.
 
