@@ -1,5 +1,7 @@
 # ⚙️ EUREKA – TECHNICAL REQUIREMENTS DOCUMENT (TRD) — MVP
 
+> ⚠️ **Status note (updated 2026-05-08):** This is an **archived TRD iteration**. The current shipped MVP follows [`prompt.md`](../prompt.md) (planogram platform). For what's actually built and deployed, see [`docs/STATUS.md`](STATUS.md) and the root [`readme.md`](../readme.md). Prefer `MVP_TECHNICAL_REQUIREMENTS_DOCUMENT_v2.md` over this file for the historical v2 record.
+
 ---
 
 ## 1. 🧠 System Overview
