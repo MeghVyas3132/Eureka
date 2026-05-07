@@ -3,6 +3,8 @@
 > **AI-powered Retail Store Intelligence Platform**
 > Design. Place. Analyze.
 
+> ⚠️ **Status note (updated 2026-05-08):** This describes the **previous canvas-first MVP iteration**. The current shipped product follows [`prompt.md`](../prompt.md) (planogram platform: Upload → Structure → Generate → Edit → Export). For the live overview, quickstart, and what's actually built, see the root [`readme.md`](../readme.md) and [`docs/STATUS.md`](STATUS.md).
+
 ---
 
 ## 🧠 Overview
