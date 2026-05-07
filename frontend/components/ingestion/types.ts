@@ -6,9 +6,20 @@ export interface ImportError {
   reason: string;
 }
 
+export interface PotentialDuplicate {
+  row_a?: number | null;
+  sku_a: string;
+  name_a: string;
+  row_b: number;
+  sku_b: string;
+  name_b: string;
+  similarity: number;
+  source: "intra_file" | "cross_import" | string;
+}
+
 export interface ImportSummaryResponse {
   import_id: string;
-  import_type: "product" | "sales";
+  import_type: "product" | "sales" | "store";
   file_format: FileFormat;
   original_filename: string;
   imported_at: string;
@@ -20,11 +31,12 @@ export interface ImportSummaryResponse {
   period_start?: string | null;
   period_end?: string | null;
   unmatched_skus?: string[] | null;
+  potential_duplicates?: PotentialDuplicate[] | null;
 }
 
 export interface ImportLogResponse {
   id: string;
-  import_type: "product" | "sales";
+  import_type: "product" | "sales" | "store";
   file_format: FileFormat;
   original_filename: string;
   file_size_bytes: number;
