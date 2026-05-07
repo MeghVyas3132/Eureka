@@ -1,5 +1,6 @@
 "use client";
 
+import axios from "axios";
 import { FormEvent, useEffect, useState } from "react";
 
 import { api } from "@/lib/api";
@@ -19,7 +20,7 @@ export interface StoreRecord {
 interface NewStoreModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreated: (store: StoreRecord) => void;
+  onCreated: (store: StoreRecord) => void | Promise<void>;
 }
 
 const DEFAULT_FORM = {
@@ -53,10 +54,21 @@ export default function NewStoreModal({ isOpen, onClose, onCreated }: NewStoreMo
         width_m: Number(form.width_m),
         height_m: Number(form.height_m),
       });
-      onCreated(response.data);
+      await onCreated(response.data);
       onClose();
-    } catch {
-      setError("Unable to create store. Check the fields and try again.");
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        const detail = err.response?.data?.detail;
+        if (typeof detail === "string" && detail.trim().length > 0) {
+          setError(detail);
+        } else {
+          setError("Unable to create store. Check the fields and try again.");
+        }
+      } else if (err instanceof Error && err.message.trim().length > 0) {
+        setError(err.message);
+      } else {
+        setError("Unable to create store. Check the fields and try again.");
+      }
     } finally {
       setLoading(false);
     }
