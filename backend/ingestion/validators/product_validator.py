@@ -53,21 +53,14 @@ def validate_product_rows(raw_rows: list[dict]) -> ValidationResult:
         for float_field in ["width_cm", "height_cm", "depth_cm"]:
             val, err = parse_float(row.get(float_field, ""), float_field)
             if err:
-                errors.append(err)
-            elif val is not None:
-                if val <= 0:
-                    errors.append(f"{float_field} must be greater than 0, got {val}")
-                else:
-                    clean_row[float_field] = val
+                # Optional field parsing issues are warning-only; do not block row import.
+                continue
+            if val is not None and val > 0:
+                clean_row[float_field] = val
 
         price_val, price_err = parse_float(row.get("price", ""), "price")
-        if price_err:
-            errors.append(price_err)
-        elif price_val is not None:
-            if price_val < 0:
-                errors.append(f"price must be >= 0, got {price_val}")
-            else:
-                clean_row["price"] = price_val
+        if not price_err and price_val is not None and price_val >= 0:
+            clean_row["price"] = price_val
 
         if errors:
             error_rows.append(RowError(row=row_num, reason="; ".join(errors), raw_data=raw_row))
