@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useDropzone } from "react-dropzone";
+import { useDropzone, type FileRejection } from "react-dropzone";
 
 interface FileUploaderProps {
   onUpload: (file: File) => void;
@@ -53,7 +53,7 @@ export default function FileUploader({
   const maxSize = useMemo(() => maxSizeMB * 1024 * 1024, [maxSizeMB]);
 
   const onDrop = useCallback(
-    (acceptedFiles: File[], fileRejections) => {
+    (acceptedFiles: File[], fileRejections: FileRejection[]) => {
       if (fileRejections.length > 0) {
         setError(fileRejections[0]?.errors[0]?.message ?? "File rejected.");
         setSelectedFile(null);
