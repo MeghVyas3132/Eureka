@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 
 import AuthCard from "@/components/auth/AuthCard";
-import { getPostLoginRoute, useAuthStore } from "@/store/authStore";
+import { resolvePostLoginRoute, useAuthStore } from "@/store/authStore";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,9 +30,17 @@ export default function LoginPage() {
   }, []);
 
   useEffect(() => {
-    if (token && user) {
-      router.replace(getPostLoginRoute(user));
-    }
+    if (!token || !user) return;
+    let cancelled = false;
+    void (async () => {
+      const target = await resolvePostLoginRoute(user);
+      if (!cancelled) {
+        router.replace(target);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [router, token, user]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -42,7 +50,8 @@ export default function LoginPage() {
 
     try {
       const authenticatedUser = await login(email, password);
-      router.push(getPostLoginRoute(authenticatedUser));
+      const target = await resolvePostLoginRoute(authenticatedUser);
+      router.push(target);
     } catch (err) {
       if (axios.isAxiosError(err)) {
         const apiError = err.response?.data?.error;
