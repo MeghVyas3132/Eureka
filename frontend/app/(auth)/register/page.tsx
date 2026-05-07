@@ -1,5 +1,6 @@
 "use client";
 
+import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
@@ -30,6 +31,29 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const getRegistrationError = (err: unknown): string => {
+    if (!axios.isAxiosError(err)) {
+      return "Unable to submit signup request. Please try again.";
+    }
+
+    const apiError = err.response?.data?.error;
+    const detail = err.response?.data?.detail;
+
+    if (apiError === "email_exists") {
+      return "Email is already registered. Try signing in instead.";
+    }
+
+    if (apiError === "username_exists") {
+      return "Username is already taken. Please choose another.";
+    }
+
+    if (typeof detail === "string" && detail.trim()) {
+      return detail;
+    }
+
+    return "Unable to submit signup request. Try a different username or email.";
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
@@ -48,8 +72,7 @@ export default function RegisterPage() {
       });
       router.push("/login?approval=pending");
     } catch (err) {
-      setError("Unable to submit signup request. Try a different username or email.");
-      console.error(err);
+      setError(getRegistrationError(err));
     } finally {
       setLoading(false);
     }
