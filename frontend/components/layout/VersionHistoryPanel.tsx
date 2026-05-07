@@ -3,31 +3,31 @@
 import { useEffect, useState } from "react";
 
 import { api } from "@/lib/api";
-import type { Layout, LayoutVersionSummary } from "@/store/canvasStore";
+import type {
+  Planogram,
+  PlanogramVersionListResponse,
+  PlanogramVersionSummary,
+} from "@/types/planogram";
 
 interface VersionHistoryPanelProps {
-  layoutId: string | null;
+  planogramId: string | null;
   isOpen: boolean;
   onClose: () => void;
-  onRestored: (layout: Layout) => void;
-}
-
-interface VersionListResponse {
-  data: LayoutVersionSummary[];
+  onRestored: (planogram: Planogram) => void;
 }
 
 export default function VersionHistoryPanel({
-  layoutId,
+  planogramId,
   isOpen,
   onClose,
   onRestored,
 }: VersionHistoryPanelProps) {
-  const [versions, setVersions] = useState<LayoutVersionSummary[]>([]);
+  const [versions, setVersions] = useState<PlanogramVersionSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!isOpen || !layoutId) {
+    if (!isOpen || !planogramId) {
       return;
     }
 
@@ -35,7 +35,9 @@ export default function VersionHistoryPanel({
       setLoading(true);
       setError("");
       try {
-        const response = await api.get<VersionListResponse>(`/api/v1/layouts/${layoutId}/versions`);
+        const response = await api.get<PlanogramVersionListResponse>(
+          `/api/v1/planograms/${planogramId}/versions`,
+        );
         setVersions(response.data.data);
       } catch {
         setError("Unable to load version history.");
@@ -45,16 +47,18 @@ export default function VersionHistoryPanel({
     };
 
     void fetchVersions();
-  }, [isOpen, layoutId]);
+  }, [isOpen, planogramId]);
 
   const handleRestore = async (versionId: string) => {
-    if (!layoutId) {
+    if (!planogramId) {
       return;
     }
     setLoading(true);
     setError("");
     try {
-      const response = await api.post<Layout>(`/api/v1/layouts/${layoutId}/rollback/${versionId}`);
+      const response = await api.post<Planogram>(
+        `/api/v1/planograms/${planogramId}/rollback/${versionId}`,
+      );
       onRestored(response.data);
       onClose();
     } catch {
@@ -78,7 +82,7 @@ export default function VersionHistoryPanel({
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-ink/50">History</p>
-            <h3 className="mt-2 text-xl font-semibold text-ink">Layout Versions</h3>
+            <h3 className="mt-2 text-xl font-semibold text-ink">Planogram Versions</h3>
           </div>
           <button
             type="button"
