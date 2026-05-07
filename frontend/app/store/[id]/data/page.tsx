@@ -1,7 +1,7 @@
 "use client";
 
-import { useParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useParams, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
 import ImportHistory from "@/components/ingestion/ImportHistory";
 import DataFreshnessIndicator from "@/components/sales/DataFreshnessIndicator";
@@ -16,10 +16,22 @@ const TABS = [
 
 type TabKey = (typeof TABS)[number]["key"];
 
+function isTabKey(value: string): value is TabKey {
+  return TABS.some((tab) => tab.key === value);
+}
+
 export default function StoreDataPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const storeId = params?.id as string;
   const [activeTab, setActiveTab] = useState<TabKey>("import");
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam && isTabKey(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   const historyUrl = useMemo(
     () => `/api/v1/sales/import/history?store_id=${storeId}`,
