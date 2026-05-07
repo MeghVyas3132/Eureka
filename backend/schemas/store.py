@@ -4,7 +4,14 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-StoreType = Literal["supermarket", "convenience", "specialty"]
+StoreType = Literal[
+    "supermarket",
+    "convenience",
+    "hypermarket",
+    "specialty",
+    "wholesale",
+    "unknown",
+]
 
 
 class StoreCreate(BaseModel):
@@ -19,9 +26,9 @@ class StoreCreate(BaseModel):
     pin_code: str | None = Field(None, min_length=1, max_length=20)
     parse_confidence: float | None = Field(None, ge=0, le=1)
     source: str | None = Field(None, min_length=1, max_length=50)
-    width_m: float = Field(..., gt=0, le=1000, description="Store width in metres")
-    height_m: float = Field(..., gt=0, le=1000, description="Store height in metres")
-    store_type: StoreType
+    width_m: float | None = Field(None, gt=0, le=1000, description="Store width in metres")
+    height_m: float | None = Field(None, gt=0, le=1000, description="Store height in metres")
+    store_type: StoreType | None = None
 
 
 class StoreUpdate(BaseModel):
