@@ -38,8 +38,24 @@ type SuperAdminUserRow = {
   reviewed_at: string | null;
   review_note: string | null;
   created_at: string;
-  layout_count: number;
+  planogram_count: number;
   plan_limit: UserPlanLimit;
+};
+
+type AdminStats = {
+  users: { total: number; approved: number; pending: number };
+  stores: { total: number };
+  planograms: {
+    total: number;
+    total_quota: number;
+    has_unlimited_users: boolean;
+    utilisation_pct: number | null;
+  };
+};
+
+type AdminStatsResponse = {
+  data: AdminStats;
+  message: string;
 };
 
 type SuperAdminUsersResponse = {
@@ -110,6 +126,7 @@ export default function SuperAdminPage() {
   const [rowsError, setRowsError] = useState("");
   const [actionUserId, setActionUserId] = useState<string | null>(null);
 
+  const [adminStats, setAdminStats] = useState<AdminStats | null>(null);
   const [editingLimitUser, setEditingLimitUser] = useState<SuperAdminUserRow | null>(null);
   const [limitDraft, setLimitDraft] = useState({
     annualLimit: "",
@@ -137,12 +154,14 @@ export default function SuperAdminPage() {
       setLoadingRows(true);
       setRowsError("");
       try {
-        const [onboardingResponse, usersResponse] = await Promise.all([
+        const [onboardingResponse, usersResponse, statsResponse] = await Promise.all([
           api.get<SuperAdminUsersResponse>(`/api/v1/admin/onboarding/requests?status=${requestFilter}`),
           api.get<SuperAdminUsersResponse>("/api/v1/admin/users"),
+          api.get<AdminStatsResponse>("/api/v1/admin/stats"),
         ]);
         setOnboardingRows(onboardingResponse.data.data);
         setUsersRows(usersResponse.data.data.filter((row) => row.role !== "admin"));
+        setAdminStats(statsResponse.data.data);
       } catch {
         setRowsError("Unable to fetch super admin data.");
       } finally {
@@ -259,6 +278,56 @@ export default function SuperAdminPage() {
           </div>
         </div>
       </header>
+
+      {adminStats ? (
+        <section className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p className="text-xs uppercase tracking-wider text-slate-500">Total users</p>
+            <p className="mt-1 text-2xl font-bold text-slate-900">{adminStats.users.total}</p>
+            <p className="mt-1 text-xs text-slate-500">
+              {adminStats.users.approved} approved · {adminStats.users.pending} pending
+            </p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p className="text-xs uppercase tracking-wider text-slate-500">Total stores</p>
+            <p className="mt-1 text-2xl font-bold text-slate-900">{adminStats.stores.total}</p>
+            <p className="mt-1 text-xs text-slate-500">across all users</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p className="text-xs uppercase tracking-wider text-slate-500">Total planograms</p>
+            <p className="mt-1 text-2xl font-bold text-slate-900">{adminStats.planograms.total}</p>
+            <p className="mt-1 text-xs text-slate-500">
+              of {adminStats.planograms.has_unlimited_users ? "∞" : adminStats.planograms.total_quota} quota
+            </p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p className="text-xs uppercase tracking-wider text-slate-500">Utilisation</p>
+            <p className="mt-1 text-2xl font-bold text-slate-900">
+              {adminStats.planograms.utilisation_pct !== null
+                ? `${adminStats.planograms.utilisation_pct.toFixed(1)}%`
+                : "—"}
+            </p>
+            {adminStats.planograms.utilisation_pct !== null ? (
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className={`h-full ${
+                    adminStats.planograms.utilisation_pct >= 90
+                      ? "bg-rose-500"
+                      : adminStats.planograms.utilisation_pct >= 70
+                        ? "bg-amber-500"
+                        : "bg-emerald-500"
+                  }`}
+                  style={{
+                    width: `${Math.min(100, adminStats.planograms.utilisation_pct)}%`,
+                  }}
+                />
+              </div>
+            ) : (
+              <p className="mt-2 text-xs text-slate-500">unlimited users present</p>
+            )}
+          </div>
+        </section>
+      ) : null}
 
       <section className="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-center gap-2">
@@ -459,42 +528,76 @@ export default function SuperAdminPage() {
                     <th className="px-3 py-2">Phone</th>
                     <th className="px-3 py-2">Plan</th>
                     <th className="px-3 py-2">Limits</th>
+                    <th className="px-3 py-2">Usage</th>
                     <th className="px-3 py-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {usersRows.map((row) => (
-                    <tr key={row.id} className="border-t border-slate-100">
-                      <td className="px-3 py-3 font-semibold text-slate-800">{row.username}</td>
-                      <td className="px-3 py-3 text-slate-700">{row.first_name}</td>
-                      <td className="px-3 py-3 text-slate-700">{row.last_name}</td>
-                      <td className="px-3 py-3 text-slate-700">{row.email}</td>
-                      <td className="px-3 py-3 text-slate-700">{row.phone_number || "-"}</td>
-                      <td className="px-3 py-3 text-slate-700">{PLAN_LABELS[row.subscription_tier]}</td>
-                      <td className="px-3 py-3">
-                        <p className="font-semibold text-slate-800">{formatLimit(row.plan_limit)}</p>
-                        <span
-                          className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
-                            row.plan_limit.source === "override"
-                              ? "bg-blue-100 text-blue-700"
-                              : "bg-slate-100 text-slate-600"
-                          }`}
-                        >
-                          {row.plan_limit.source === "override" ? "Override" : "Tier default"}
-                        </span>
-                      </td>
-                      <td className="px-3 py-3">
-                        <button
-                          type="button"
-                          aria-label={`Edit limits for ${row.username}`}
-                          onClick={() => openLimitEditor(row)}
-                          className="rounded-md bg-pink-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-pink-700"
-                        >
-                          Limits
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {usersRows.map((row) => {
+                    const limit = row.plan_limit.annual_planogram_limit ?? null;
+                    const utilisation =
+                      limit && limit > 0 && !row.plan_limit.is_unlimited
+                        ? Math.min(100, (row.planogram_count / limit) * 100)
+                        : null;
+                    const usageColor =
+                      utilisation === null
+                        ? "bg-slate-300"
+                        : utilisation >= 90
+                          ? "bg-rose-500"
+                          : utilisation >= 70
+                            ? "bg-amber-500"
+                            : "bg-emerald-500";
+                    return (
+                      <tr key={row.id} className="border-t border-slate-100">
+                        <td className="px-3 py-3 font-semibold text-slate-800">{row.username}</td>
+                        <td className="px-3 py-3 text-slate-700">{row.first_name}</td>
+                        <td className="px-3 py-3 text-slate-700">{row.last_name}</td>
+                        <td className="px-3 py-3 text-slate-700">{row.email}</td>
+                        <td className="px-3 py-3 text-slate-700">{row.phone_number || "-"}</td>
+                        <td className="px-3 py-3 text-slate-700">{PLAN_LABELS[row.subscription_tier]}</td>
+                        <td className="px-3 py-3">
+                          <p className="font-semibold text-slate-800">{formatLimit(row.plan_limit)}</p>
+                          <span
+                            className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
+                              row.plan_limit.source === "override"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-slate-100 text-slate-600"
+                            }`}
+                          >
+                            {row.plan_limit.source === "override" ? "Override" : "Tier default"}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3">
+                          <p className="text-sm font-semibold text-slate-800">
+                            {row.planogram_count}
+                            {row.plan_limit.is_unlimited ? " / ∞" : limit ? ` / ${limit}` : ""}
+                          </p>
+                          {utilisation !== null ? (
+                            <div className="mt-1 h-1.5 w-24 overflow-hidden rounded-full bg-slate-100">
+                              <div
+                                className={`h-full ${usageColor}`}
+                                style={{ width: `${utilisation}%` }}
+                              />
+                            </div>
+                          ) : (
+                            <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-400">
+                              {row.plan_limit.is_unlimited ? "Unlimited" : "No limit set"}
+                            </p>
+                          )}
+                        </td>
+                        <td className="px-3 py-3">
+                          <button
+                            type="button"
+                            aria-label={`Edit limits for ${row.username}`}
+                            onClick={() => openLimitEditor(row)}
+                            className="rounded-md bg-pink-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-pink-700"
+                          >
+                            Limits
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
