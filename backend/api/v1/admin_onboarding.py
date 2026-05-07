@@ -12,7 +12,7 @@ from core.constants import (
 )
 from core.deps import require_role
 from db.session import get_db
-from models.layout import Layout
+from models.planogram import Planogram
 from models.store import Store
 from models.user import User
 from schemas.admin_onboarding import OnboardingDecisionRequest, OnboardingDecisionResponseData
@@ -22,7 +22,7 @@ from services.plan_limit_service import get_plan_limits_by_tier, resolve_user_pl
 router = APIRouter(prefix="/api/v1/admin/onboarding", tags=["admin-onboarding"])
 
 
-def _user_with_layout_count_query():
+def _user_with_planogram_count_query():
     return (
         select(
             User.id,
@@ -40,10 +40,10 @@ def _user_with_layout_count_query():
             User.reviewed_at,
             User.review_note,
             User.created_at,
-            func.count(Layout.id).label("layout_count"),
+            func.count(Planogram.id).label("planogram_count"),
         )
         .outerjoin(Store, Store.user_id == User.id)
-        .outerjoin(Layout, Layout.store_id == Store.id)
+        .outerjoin(Planogram, Planogram.store_id == Store.id)
         .group_by(User.id)
     )
 
@@ -55,7 +55,7 @@ async def list_onboarding_requests(
     _: object = Depends(require_role([ROLE_ADMIN])),
 ) -> dict:
     plan_limits_by_tier = await get_plan_limits_by_tier(db)
-    query = _user_with_layout_count_query().where(User.role != ROLE_ADMIN)
+    query = _user_with_planogram_count_query().where(User.role != ROLE_ADMIN)
     if status_filter != "all":
         query = query.where(User.approval_status == status_filter)
 
@@ -65,7 +65,7 @@ async def list_onboarding_requests(
     response_data: list[dict] = []
     for record in records:
         normalized = dict(record)
-        normalized["layout_count"] = int(normalized["layout_count"] or 0)
+        normalized["planogram_count"] = int(normalized["planogram_count"] or 0)
         normalized["plan_limit"] = resolve_user_plan_limit(
             subscription_tier=normalized["subscription_tier"],
             annual_override=normalized.get("annual_planogram_limit_override"),
