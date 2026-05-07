@@ -3,6 +3,8 @@
 > **AI-powered Retail Store Intelligence Platform**
 > Design. Place. Analyze.
 
+> ⚠️ **Status note (updated 2026-05-08):** This is an **archived MVP readme**. The current shipped MVP is the **planogram platform** specified in [`prompt.md`](../prompt.md). For the live overview, quickstart, and shipped status, see the root [`readme.md`](../readme.md) and [`docs/STATUS.md`](STATUS.md).
+
 ---
 
 ## 🧠 Overview
