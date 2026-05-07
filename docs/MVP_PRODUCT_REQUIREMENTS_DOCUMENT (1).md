@@ -1,5 +1,7 @@
 # 📘 EUREKA – PRODUCT REQUIREMENTS DOCUMENT (PRD) — MVP
 
+> ⚠️ **Status note (updated 2026-05-08):** This is an **archived MVP iteration**. The current shipped MVP is the **planogram platform** specified in [`prompt.md`](../prompt.md). For what's actually built and deployed, see [`docs/STATUS.md`](STATUS.md) and the root [`readme.md`](../readme.md). Prefer `MVP_PRODUCT_REQUIREMENTS_DOCUMENT_v2.md` over this file for the historical v2 record.
+
 ---
 
 ## 1. 🧠 Product Overview
