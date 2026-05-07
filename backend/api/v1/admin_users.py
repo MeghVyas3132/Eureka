@@ -8,7 +8,7 @@ from core.api_response import error_payload, success_response
 from core.constants import ROLE_ADMIN
 from core.deps import require_role
 from db.session import get_db
-from models.layout import Layout
+from models.planogram import Planogram
 from models.store import Store
 from models.user import User
 from schemas.user import AdminUserPlanLimitResponse, AdminUserPlanLimitUpdate, AdminUserRead, UserPlanLimitRead
@@ -40,10 +40,10 @@ async def list_users(
             User.reviewed_at,
             User.review_note,
             User.created_at,
-            func.count(Layout.id).label("layout_count"),
+            func.count(Planogram.id).label("planogram_count"),
         )
         .outerjoin(Store, Store.user_id == User.id)
-        .outerjoin(Layout, Layout.store_id == Store.id)
+        .outerjoin(Planogram, Planogram.store_id == Store.id)
         .group_by(User.id)
         .order_by(User.created_at.desc())
     )
@@ -53,7 +53,7 @@ async def list_users(
     response_data: list[dict] = []
     for record in records:
         normalized = dict(record)
-        normalized["layout_count"] = int(normalized["layout_count"] or 0)
+        normalized["planogram_count"] = int(normalized["planogram_count"] or 0)
         normalized["plan_limit"] = resolve_user_plan_limit(
             subscription_tier=normalized["subscription_tier"],
             annual_override=normalized.get("annual_planogram_limit_override"),
