@@ -70,7 +70,7 @@ async def _login_seeded_admin(client) -> str:
 
 
 @pytest.mark.anyio
-async def test_admin_can_list_users_with_layout_counts(client):
+async def test_admin_can_list_users_with_planogram_counts(client):
     admin_token = await _login_seeded_admin(client)
 
     merch_email = f"merch-{uuid.uuid4()}@example.com"
@@ -81,18 +81,18 @@ async def test_admin_can_list_users_with_layout_counts(client):
     await _register_user(client, enterprise_email, "password123", "enterprise")
 
     store = await _create_store(client, merch_token)
-    first_layout_response = await client.post(
-        "/api/v1/layouts",
-        json={"store_id": store["id"], "name": "Layout 1"},
+    first_planogram = await client.post(
+        "/api/v1/planograms/generate",
+        json={"store_id": store["id"], "generation_level": "store"},
         headers=_auth_header(merch_token),
     )
-    second_layout_response = await client.post(
-        "/api/v1/layouts",
-        json={"store_id": store["id"], "name": "Layout 2"},
+    second_planogram = await client.post(
+        "/api/v1/planograms/generate",
+        json={"store_id": store["id"], "generation_level": "store", "force": True},
         headers=_auth_header(merch_token),
     )
-    assert first_layout_response.status_code == 201
-    assert second_layout_response.status_code == 201
+    assert first_planogram.status_code == 201
+    assert second_planogram.status_code == 201
 
     response = await client.get("/api/v1/admin/users", headers=_auth_header(admin_token))
 
@@ -108,7 +108,7 @@ async def test_admin_can_list_users_with_layout_counts(client):
     assert merch_record["phone_number"] == "1234567890"
     assert merch_record["subscription_tier"] == "individual-plus"
     assert merch_record["approval_status"] == "approved"
-    assert merch_record["layout_count"] == 2
+    assert merch_record["planogram_count"] == 2
     assert merch_record["plan_limit"] == {
         "annual_planogram_limit": 15,
         "is_unlimited": False,
