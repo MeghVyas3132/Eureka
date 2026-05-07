@@ -64,7 +64,7 @@ export default function StoreCard({ store, onRename, onDelete }: StoreCardProps)
   };
 
   const handleDelete = async () => {
-    const shouldDelete = window.confirm("Delete this store and all its layouts?");
+    const shouldDelete = window.confirm("Delete this store and all its planograms?");
     if (!shouldDelete) {
       return;
     }
@@ -123,10 +123,10 @@ export default function StoreCard({ store, onRename, onDelete }: StoreCardProps)
         <span>Created {createdLabel}</span>
         <button
           type="button"
-          onClick={() => router.push(`/store/${store.id}/layout`)}
+          onClick={() => router.push(`/stores/${store.id}/planogram/latest`)}
           className="font-semibold text-pine transition hover:text-pine/80"
         >
-          Open Layout {"->"}
+          Open Planogram {"->"}
         </button>
       </div>
     </article>
