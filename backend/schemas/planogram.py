@@ -21,6 +21,29 @@ class PlanogramCreate(BaseModel):
     planogram_json: dict = Field(default_factory=dict)
 
 
+class PlanogramGenerateRequest(BaseModel):
+    store_id: uuid.UUID
+    generation_level: GenerationLevel = "store"
+    shelf_count: int | None = Field(None, ge=1, le=50)
+    shelf_width_cm: float | None = Field(None, gt=0, le=2000)
+    shelf_height_cm: float | None = Field(None, gt=0, le=500)
+    force: bool = False
+
+
+class PlanogramGenerateAllRequest(BaseModel):
+    level: Literal["city", "state"]
+    shelf_count: int | None = Field(None, ge=1, le=50)
+    shelf_width_cm: float | None = Field(None, gt=0, le=2000)
+    shelf_height_cm: float | None = Field(None, gt=0, le=500)
+    force: bool = False
+
+
+class PlanogramGenerateAllResponse(BaseModel):
+    generated_count: int
+    skipped_edited_count: int
+    planogram_ids: list[uuid.UUID]
+
+
 class PlanogramUpdate(BaseModel):
     name: str | None = Field(None, min_length=1, max_length=255)
     shelf_count: int | None = Field(None, ge=1, le=50)
