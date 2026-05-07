@@ -1,5 +1,7 @@
 # ⚙️ EUREKA – TECHNICAL REQUIREMENTS DOCUMENT (TRD) — MVP v2
 
+> ⚠️ **Status note (updated 2026-05-08):** This is a **previous TRD iteration** (canvas-first store layout). The current shipped MVP is the **planogram platform** specified in [`prompt.md`](../prompt.md). For what's actually built and deployed (live API surface, layer-by-layer status, deployed routes), see [`docs/STATUS.md`](STATUS.md) and the root [`readme.md`](../readme.md).
+
 ---
 
 ## 1. 🧠 System Overview
