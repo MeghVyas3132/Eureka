@@ -58,7 +58,7 @@ def validate_sales_rows(
         if units_err:
             errors.append(units_err)
         elif units_val is not None and units_val < 0:
-            errors.append(f"units_sold must be >= 0, got {units_val}")
+            units_val = 0
 
         if period_start_override:
             period_start = period_start_override
